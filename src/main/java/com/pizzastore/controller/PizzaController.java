@@ -1,5 +1,7 @@
 package com.pizzastore.controller;
 
+import com.pizzastore.model.CrustType;
+import com.pizzastore.repository.CrustTypeRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +14,17 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 public class PizzaController {
+
+    private final CrustTypeRepository crustTypeRepository;
+
+    public PizzaController(CrustTypeRepository crustTypeRepository) {
+        this.crustTypeRepository = crustTypeRepository;
+    }
+
+    @GetMapping("/crust-types")
+    public List<CrustType> getCrustTypes() {
+        return crustTypeRepository.findAll();
+    }
 
     @GetMapping("/pizzas")
     public List<Map<String, Object>> getPizzas() {

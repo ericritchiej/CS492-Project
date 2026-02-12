@@ -1,27 +1,13 @@
 <div class="menu-page">
   <h2>Our Menu</h2>
-  <p class="subtitle">Browse our selection of handcrafted pizzas</p>
+  <p class="subtitle">Browse our selection of crust types</p>
 
   <div class="menu-grid">
-    <div class="menu-item">
-      <h3>Margherita</h3>
-      <p>Fresh mozzarella, tomato sauce, basil</p>
-      <span class="price">$12.99</span>
-    </div>
-    <div class="menu-item">
-      <h3>Pepperoni</h3>
-      <p>Pepperoni, mozzarella, tomato sauce</p>
-      <span class="price">$14.99</span>
-    </div>
-    <div class="menu-item">
-      <h3>Supreme</h3>
-      <p>Pepperoni, sausage, peppers, onions, olives</p>
-      <span class="price">$16.99</span>
-    </div>
-    <div class="menu-item">
-      <h3>BBQ Chicken</h3>
-      <p>Grilled chicken, BBQ sauce, red onion, cilantro</p>
-      <span class="price">$15.99</span>
-    </div>
+    @for (crust of crustTypes; track crust.crustId) {
+      <div class="menu-item">
+        <h3>{{ crust.crustName }}</h3>
+        <span class="price">{{ crust.price | currency }}</span>
+      </div>
+    }
   </div>
 </div>
