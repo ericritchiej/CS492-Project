@@ -2,6 +2,9 @@
 
 A full-stack pizza store application with a Java Spring Boot backend and an Angular frontend.
 
+#users
+All passwords are Pizza123!
+
 ## Prerequisites
 
 You need two things installed on your machine before you can run this project:
