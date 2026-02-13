@@ -1,0 +1,15 @@
+<div class="reporting-page">
+  <h2>Reports</h2>
+  <p class="subtitle">Store performance metrics</p>
+
+  <div class="reports-grid">
+    @for (report of reports(); track report.name) {
+      <div class="report-card">
+        <span class="report-value">{{ report.value }}</span>
+        <span class="report-name">{{ report.name }}</span>
+      </div>
+    }
+  </div>
+
+  <a routerLink="/admin" class="back-link">Back to Admin</a>
+</div>

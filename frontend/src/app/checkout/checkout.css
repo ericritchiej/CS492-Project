@@ -1,0 +1,56 @@
+.checkout-page h2 {
+  font-size: 1.75rem;
+  margin: 0 0 0.25rem;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.order-summary {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 500px;
+}
+
+.order-summary h3 {
+  margin: 0 0 1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  color: #333;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-top: 1px solid #e0e0e0;
+  color: #666;
+}
+
+.total-line {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #333;
+  border-top: 2px solid #e0e0e0;
+}
+
+.checkout-actions {
+  margin-top: 1.5rem;
+}
+
+.back-link {
+  color: #d32f2f;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}

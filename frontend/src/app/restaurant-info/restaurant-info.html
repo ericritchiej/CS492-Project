@@ -1,0 +1,18 @@
+<div class="restaurant-info-page">
+  <h2>Restaurant Info</h2>
+  <p class="subtitle">Find us and visit</p>
+
+  @if (info()) {
+    <div class="info-card">
+      <h3>{{ info()!.name }}</h3>
+      <p><strong>Address:</strong> {{ info()!.address }}</p>
+      <p><strong>Phone:</strong> {{ info()!.phone }}</p>
+      <h4>Hours</h4>
+      <ul>
+        @for (hour of info()!.hours; track hour) {
+          <li>{{ hour }}</li>
+        }
+      </ul>
+    </div>
+  }
+</div>

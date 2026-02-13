@@ -1,0 +1,25 @@
+<div class="profile-page">
+  <h2>Your Profile</h2>
+  <p class="subtitle">Manage your account details</p>
+
+  @if (profile()) {
+    <div class="profile-card">
+      <div class="profile-field">
+        <span class="field-label">Name</span>
+        <span class="field-value">{{ profile()!.name }}</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label">Email</span>
+        <span class="field-value">{{ profile()!.email }}</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label">Address</span>
+        <span class="field-value">{{ profile()!.address }}</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label">Phone</span>
+        <span class="field-value">{{ profile()!.phone }}</span>
+      </div>
+    </div>
+  }
+</div>

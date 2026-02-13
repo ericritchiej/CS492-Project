@@ -1,0 +1,34 @@
+<div class="checkout-page">
+  <h2>Checkout</h2>
+  <p class="subtitle">Review and confirm your order</p>
+
+  @if (summary()) {
+    <div class="order-summary">
+      <h3>Order Summary</h3>
+
+      @for (item of summary()!.items; track item.name) {
+        <div class="summary-item">
+          <span>{{ item.name }} x{{ item.quantity }}</span>
+          <span>{{ item.lineTotal | currency }}</span>
+        </div>
+      }
+
+      <div class="summary-line">
+        <span>Subtotal</span>
+        <span>{{ summary()!.subtotal | currency }}</span>
+      </div>
+      <div class="summary-line">
+        <span>Tax</span>
+        <span>{{ summary()!.tax | currency }}</span>
+      </div>
+      <div class="summary-line total-line">
+        <span>Total</span>
+        <span>{{ summary()!.total | currency }}</span>
+      </div>
+    </div>
+
+    <div class="checkout-actions">
+      <a routerLink="/cart" class="back-link">Back to Shopping Cart</a>
+    </div>
+  }
+</div>

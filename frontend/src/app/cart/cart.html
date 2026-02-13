@@ -1,0 +1,27 @@
+<div class="cart-page">
+  <h2>Your Shopping Cart</h2>
+  <p class="subtitle">Review your items before checkout</p>
+
+  @if (cart()) {
+    <div class="cart-items">
+      @for (item of cart()!.items; track item.name) {
+        <div class="cart-item">
+          <div class="item-info">
+            <span class="item-name">{{ item.name }}</span>
+            <span class="item-qty">x{{ item.quantity }}</span>
+          </div>
+          <span class="item-price">{{ item.price | currency }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="cart-total">
+      <span>Total</span>
+      <span class="total-value">{{ cart()!.total | currency }}</span>
+    </div>
+
+    <a routerLink="/checkout" class="checkout-button">Proceed to Checkout</a>
+  }
+
+  <a routerLink="/checkout" class="confirmation-link">View Order Confirmation &amp; Payment</a>
+</div>

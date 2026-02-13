@@ -1,4 +1,4 @@
-.admin-page h2 {
+.reporting-page h2 {
   font-size: 1.75rem;
   margin: 0 0 0.25rem;
 }
@@ -8,13 +8,14 @@
   margin-bottom: 1.5rem;
 }
 
-.stats-grid {
+.reports-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.stat-card {
+.report-card {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 1.5rem;
@@ -24,25 +25,23 @@
   gap: 0.5rem;
 }
 
-.stat-value {
+.report-value {
   font-size: 2rem;
   font-weight: 700;
   color: #d32f2f;
 }
 
-.stat-label {
+.report-name {
   color: #666;
   font-size: 0.9rem;
 }
 
-.reports-link {
-  display: inline-block;
-  margin-top: 1.5rem;
+.back-link {
   color: #d32f2f;
   text-decoration: none;
   font-weight: 500;
 }
 
-.reports-link:hover {
+.back-link:hover {
   text-decoration: underline;
 }

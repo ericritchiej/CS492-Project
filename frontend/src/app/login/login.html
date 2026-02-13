@@ -1,0 +1,20 @@
+<div class="login-page">
+  <h2>Login</h2>
+  <p class="subtitle">Sign in to your account</p>
+
+  @if (authStatus()) {
+    <p class="status-message">{{ authStatus()!.message }}</p>
+  }
+
+  <form class="login-form">
+    <label>
+      Username
+      <input type="text" placeholder="Enter your username">
+    </label>
+    <label>
+      Password
+      <input type="password" placeholder="Enter your password">
+    </label>
+    <button type="submit">Sign In</button>
+  </form>
+</div>
