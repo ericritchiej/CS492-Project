@@ -17,6 +17,7 @@ public class CrustTypeRepository {
         this.dsl = dsl;
     }
 
+//    This is just like a SQL statement
     public List<CrustType> findAll() {
         return dsl.select(
                         DSL.field("crust_id", Long.class),
