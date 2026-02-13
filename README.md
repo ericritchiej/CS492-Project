@@ -2,7 +2,8 @@
 
 A full-stack pizza store application with a Java Spring Boot backend and an Angular frontend.
 
-#users
+## Users
+
 All passwords are Pizza123!
 
 ## Prerequisites
@@ -36,20 +37,24 @@ You will need **two separate Command Prompt windows** open at the same time.
 1. Open a **Command Prompt** window
 2. Navigate to the project folder:
    ```cmd
-   cd C:\Users\ericr\IdeaProjects\PizzaStore
+   cd path\to\PizzaStore
    ```
-3. Start the Spring Boot backend:
+3. Set JAVA_HOME to your Java 8 installation (adjust the path if yours is different):
+   ```cmd
+   set JAVA_HOME=C:\Program Files\Java\jdk-1.8
+   ```
+4. Start the Spring Boot backend:
    ```cmd
    mvnw.cmd spring-boot:run
    ```
-4. The first time you run this it will download dependencies, which may take a minute or two. Wait until you see a line that says `Started PizzaStoreApplication` — the backend is now running on **http://localhost:8080**.
+5. The first time you run this it will download dependencies, which may take a minute or two. Wait until you see a line that says `Started PizzaStoreApplication` — the backend is now running on **http://localhost:8080**.
 
 ### Terminal 2: Start the frontend
 
 1. Open a **second Command Prompt** window
 2. Navigate to the frontend folder:
    ```cmd
-   cd C:\Users\ericr\IdeaProjects\PizzaStore\frontend
+   cd path\to\PizzaStore\frontend
    ```
 3. Install frontend dependencies (only needed the first time, or after pulling new changes):
    ```cmd
@@ -57,7 +62,7 @@ You will need **two separate Command Prompt windows** open at the same time.
    ```
 4. Start the Angular development server:
    ```cmd
-   npx ng serve --proxy-config proxy.conf.json
+   npm start
    ```
 5. Wait until you see `Compiled successfully` or `Application bundle generation complete` — the frontend is now running on **http://localhost:4200**.
 
@@ -69,13 +74,22 @@ Open your browser and go to:
 http://localhost:4200
 ```
 
-You will see the **Pizza Store** header with three navigation links:
+You will see the **Pizza Store** header with a navigation bar containing:
 
-- **Menu** — Browse the pizza menu with prices
-- **Orders** — View order history and delivery status
-- **Admin** — Store dashboard with daily stats
+- **Menu** — Browse the pizza menu with crust types and prices
+- **Restaurant Info** — View the restaurant name, address, phone, and hours
+- **User Tools** (dropdown) — Hover to reveal:
+  - **Previous Orders** — View order history and delivery status
+  - **Profile** — View customer profile details
+  - **Login** — Sign-in page with username/password fields
+  - **Admin** — Store dashboard with daily stats (links to Reporting)
+- **Shopping Cart** (cart icon) — View cart items and total
+  - Links to the **Order Confirmation & Payment** page (Checkout)
 
-Click each link to switch between pages.
+Additional pages not in the main nav:
+
+- **Checkout** (`/checkout`) — Order summary with subtotal, tax, and total. Accessible from the Shopping Cart page.
+- **Reporting** (`/reporting`) — Store performance metrics. Accessible from the Admin page via "View Reports".
 
 ### Stopping the application
 
@@ -85,29 +99,55 @@ Press `Ctrl+C` in each Command Prompt window to stop the servers.
 
 ```
 PizzaStore/
-├── src/main/java/com/pizzastore/   # Java backend (Spring Boot)
-│   ├── PizzaStoreApplication.java  # Application entry point
+├── src/main/java/com/pizzastore/        # Java backend (Spring Boot)
+│   ├── PizzaStoreApplication.java       # Application entry point
+│   ├── model/                           # Data models
+│   ├── repository/                      # Database repositories
 │   └── controller/
-│       └── PizzaController.java    # REST API endpoints
+│       ├── PizzaController.java         # Pizzas, orders, stats endpoints
+│       ├── AuthController.java          # Authentication status
+│       ├── RestaurantInfoController.java # Restaurant details
+│       ├── ProfileController.java       # Customer profile
+│       ├── CartController.java          # Shopping cart
+│       ├── CheckoutController.java      # Checkout / order summary
+│       └── ReportingController.java     # Store reports
 ├── src/main/resources/
-│   └── application.properties      # Server configuration
-├── frontend/                       # Angular frontend
+│   └── application.properties           # Server and database configuration
+├── frontend/                            # Angular frontend
+│   ├── proxy.conf.json                  # Dev proxy (forwards /api to backend)
 │   └── src/app/
-│       ├── menu/                   # Menu page
-│       ├── orders/                 # Orders page
-│       └── admin/                  # Admin dashboard
-├── pom.xml                         # Maven build configuration
-├── mvnw.cmd                        # Maven wrapper (no Maven install needed)
-└── .mvn/wrapper/                   # Maven wrapper support files
+│       ├── app.ts, app.html, app.css    # Root component with nav bar
+│       ├── app.routes.ts                # Route definitions
+│       ├── menu/                        # Menu page
+│       ├── orders/                      # Previous Orders page
+│       ├── admin/                       # Admin dashboard
+│       ├── login/                       # Login page
+│       ├── restaurant-info/             # Restaurant Info page
+│       ├── profile/                     # Customer Profile page
+│       ├── cart/                        # Shopping Cart page
+│       ├── checkout/                    # Order Confirmation & Payment page
+│       └── reporting/                   # Reporting page
+├── pom.xml                              # Maven build configuration
+├── mvnw.cmd                             # Maven wrapper (no Maven install needed)
+└── .mvn/wrapper/                        # Maven wrapper support files
 ```
 
 ## API Endpoints
 
 The backend exposes the following REST endpoints:
 
-- `GET /api/pizzas` — List all pizzas
-- `GET /api/orders` — List all orders
-- `GET /api/stats` — Get store statistics
+| Endpoint | Description |
+|---|---|
+| `GET /api/pizzas` | List all pizzas |
+| `GET /api/crust-types` | List crust types (from database) |
+| `GET /api/orders` | List all orders |
+| `GET /api/stats` | Get store statistics |
+| `GET /api/auth/status` | Get authentication status |
+| `GET /api/restaurant-info` | Get restaurant name, address, phone, hours |
+| `GET /api/profile` | Get customer profile |
+| `GET /api/cart` | Get shopping cart items and total |
+| `GET /api/checkout/summary` | Get order summary with subtotal, tax, total |
+| `GET /api/reports` | Get store performance reports |
 
 During development, the Angular proxy (`proxy.conf.json`) forwards `/api` requests from port 4200 to the backend on port 8080.
 
@@ -145,3 +185,5 @@ java -jar target/pizza-store-0.0.1-SNAPSHOT.jar
   ```cmd
   set JAVA_HOME=C:\Program Files\Java\jdk-1.8
   ```
+- **"No compiler is provided" error** — You have a JRE but not a JDK. Make sure `JAVA_HOME` points to a JDK (not JRE) installation, and that you set it before running `mvnw.cmd`.
+- **Frontend can't reach backend API** — Make sure the backend is running on port 8080 before starting the frontend. The Angular dev server proxies `/api` requests to `localhost:8080`.
