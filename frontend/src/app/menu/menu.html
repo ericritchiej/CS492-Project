@@ -3,7 +3,7 @@
   <p class="subtitle">Browse our selection of crust types</p>
 
   <div class="menu-grid">
-    @for (crust of crustTypes; track crust.crustId) {
+    @for (crust of crustTypes(); track crust.crustId) {
       <div class="menu-item">
         <h3>{{ crust.crustName }}</h3>
         <span class="price">{{ crust.price | currency }}</span>

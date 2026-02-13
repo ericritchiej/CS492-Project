@@ -1,21 +1,21 @@
 package com.pizzastore.model;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "crust_types")
 public class CrustType {
 
-    @Id
-    @Column(name = "crust_id")
     private Long crustId;
-
-    @Column(name = "crust_name")
     private String crustName;
-
-    @Column(name = "price")
     private BigDecimal price;
+
+    public CrustType() {
+    }
+
+    public CrustType(Long crustId, String crustName, BigDecimal price) {
+        this.crustId = crustId;
+        this.crustName = crustName;
+        this.price = price;
+    }
 
     public Long getCrustId() {
         return crustId;
