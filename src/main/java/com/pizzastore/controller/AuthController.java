@@ -51,11 +51,19 @@ public class AuthController {
         if (users != null && !users.isEmpty()) {
             User user = users.get(0);
             logger.info("Found user: {}", username);
-            logger.info("Password: {}", user.toString());
+//            logger.info("Password: {}", user.toString());
 
             if (passwordEncoder.matches(password, user.getPassword())) {
-                Map<String, String> response = new HashMap<>();
-                response.put("message", "Files processed successfully!");
+                Map<String, Object> userDto = new HashMap<>();
+                userDto.put("id", user.getId());
+                userDto.put("email", user.getEmail());
+                userDto.put("firstName", user.getFirstName());
+                userDto.put("lastName", user.getLastName());
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "Login successful");
+                response.put("user", userDto);
+
                 return ResponseEntity.ok(response);
             }
         }

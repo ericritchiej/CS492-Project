@@ -6,10 +6,23 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angula
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
 
+import { AuthService } from '../auth.service'; // adjust path if needed
+
+
 interface AuthStatus {
   loggedIn: boolean;
   message: string;
 }
+
+type SignInResponse = {
+  message: string;
+  user: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+};
 
 @Component({
   selector: 'app-login',
@@ -23,7 +36,7 @@ export class Login implements OnInit {
   loginForm!: FormGroup;
   signinError: any;
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router, private cdr: ChangeDetectorRef) {
+  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router, private cdr: ChangeDetectorRef, private auth: AuthService) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required]],
@@ -52,10 +65,12 @@ export class Login implements OnInit {
       return;
     }
 
-    this.http.post<{ message: string }>('/api/auth/signin', body, {
+    this.http.post<SignInResponse>('/api/auth/signin', body, {
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     }).subscribe({
       next: (res) => {
+        this.auth.setUser(res.user);
+
         this.router.navigate(['/menu']);
       },
       error: (err) => {
