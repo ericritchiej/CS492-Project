@@ -47,23 +47,3 @@
 .login-form button:hover {
   background-color: #b71c1c;
 }
-
-.error {
-  margin: 12px 0;
-  padding: 10px 12px;
-  border: 1px solid #d32f2f;
-  border-radius: 6px;
-  background: #fdecea;
-  color: #b71c1c;
-  font-size: 0.95rem;
-}
-.field-error {
-  color: #d9534f; /* A standard red error color */
-  font-size: 0.85rem;
-  margin-top: 4px;
-  display: block;
-}
-
-input.ng-invalid.ng-touched {
-  border: 1px solid #d9534f; /* Highlights the box red when invalid */
-}

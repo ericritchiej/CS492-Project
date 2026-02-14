@@ -6,6 +6,10 @@ A full-stack pizza store application with a Java Spring Boot backend and an Angu
 
 All passwords are Pizza123!
 
+
+## Loggin
+Log file = C:\logs\pizzastore
+
 ## Prerequisites
 
 You need two things installed on your machine before you can run this project:
@@ -37,7 +41,7 @@ You will need **two separate Command Prompt windows** open at the same time.
 1. Open a **Command Prompt** window
 2. Navigate to the project folder:
    ```cmd
-   cd path\to\PizzaStore
+   cd C:\Users\ericr\IdeaProjects\PizzaStore
    ```
 3. Set JAVA_HOME to your Java 8 installation (adjust the path if yours is different):
    ```cmd
@@ -54,7 +58,7 @@ You will need **two separate Command Prompt windows** open at the same time.
 1. Open a **second Command Prompt** window
 2. Navigate to the frontend folder:
    ```cmd
-   cd path\to\PizzaStore\frontend
+   cd C:\Users\ericr\IdeaProjects\PizzaStore\frontend
    ```
 3. Install frontend dependencies (only needed the first time, or after pulling new changes):
    ```cmd
@@ -82,6 +86,7 @@ You will see the **Pizza Store** header with a navigation bar containing:
   - **Previous Orders** — View order history and delivery status
   - **Profile** — View customer profile details
   - **Login** — Sign-in page with username/password fields
+  - **New Account** — Create a new account with email and password
   - **Admin** — Store dashboard with daily stats (links to Reporting)
 - **Shopping Cart** (cart icon) — View cart items and total
   - Links to the **Order Confirmation & Payment** page (Checkout)
@@ -99,18 +104,22 @@ Press `Ctrl+C` in each Command Prompt window to stop the servers.
 
 ```
 PizzaStore/
-├── src/main/java/com/pizzastore/        # Java backend (Spring Boot)
-│   ├── PizzaStoreApplication.java       # Application entry point
-│   ├── model/                           # Data models
-│   ├── repository/                      # Database repositories
-│   └── controller/
-│       ├── PizzaController.java         # Pizzas, orders, stats endpoints
-│       ├── AuthController.java          # Authentication status
-│       ├── RestaurantInfoController.java # Restaurant details
-│       ├── ProfileController.java       # Customer profile
-│       ├── CartController.java          # Shopping cart
-│       ├── CheckoutController.java      # Checkout / order summary
-│       └── ReportingController.java     # Store reports
+├── src/main/java/
+│   ├── SecurityBeans.java               # Spring Security config (BCrypt, CORS)
+│   └── com/pizzastore/                  # Java backend (Spring Boot)
+│       ├── PizzaStoreApplication.java   # Application entry point
+│       ├── model/                       # Data models
+│       │   └── User.java               # User account model
+│       ├── repository/                  # Database repositories
+│       │   └── UserRepository.java      # User lookup queries
+│       └── controller/
+│           ├── PizzaController.java     # Pizzas, orders, stats endpoints
+│           ├── AuthController.java      # Authentication & sign-in
+│           ├── RestaurantInfoController.java # Restaurant details
+│           ├── ProfileController.java   # Customer profile
+│           ├── CartController.java      # Shopping cart
+│           ├── CheckoutController.java  # Checkout / order summary
+│           └── ReportingController.java # Store reports
 ├── src/main/resources/
 │   └── application.properties           # Server and database configuration
 ├── frontend/                            # Angular frontend
@@ -122,6 +131,7 @@ PizzaStore/
 │       ├── orders/                      # Previous Orders page
 │       ├── admin/                       # Admin dashboard
 │       ├── login/                       # Login page
+│       ├── newAccount/                  # New Account page
 │       ├── restaurant-info/             # Restaurant Info page
 │       ├── profile/                     # Customer Profile page
 │       ├── cart/                        # Shopping Cart page
@@ -143,6 +153,7 @@ The backend exposes the following REST endpoints:
 | `GET /api/orders` | List all orders |
 | `GET /api/stats` | Get store statistics |
 | `GET /api/auth/status` | Get authentication status |
+| `POST /api/auth/signin` | Sign in with username and password |
 | `GET /api/restaurant-info` | Get restaurant name, address, phone, hours |
 | `GET /api/profile` | Get customer profile |
 | `GET /api/cart` | Get shopping cart items and total |
@@ -175,6 +186,10 @@ This creates production files in `frontend/dist/frontend/`.
 ```cmd
 java -jar target/pizza-store-0.0.1-SNAPSHOT.jar
 ```
+
+## Security
+
+The app uses Spring Security with BCrypt password hashing. Passwords in the database are stored as BCrypt hashes, not plain text. The security configuration lives in `SecurityBeans.java` in the root source package (`src/main/java/`).
 
 ## Troubleshooting
 

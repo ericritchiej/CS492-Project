@@ -8,6 +8,7 @@ import { Profile } from './profile/profile';
 import { Cart } from './cart/cart';
 import { Checkout } from './checkout/checkout';
 import { Reporting } from './reporting/reporting';
+import { NewAccount } from './newAccount/newAccount';
 
 export const routes: Routes = [
   { path: 'menu', component: Menu },
@@ -19,4 +20,5 @@ export const routes: Routes = [
   { path: 'cart', component: Cart },
   { path: 'checkout', component: Checkout },
   { path: 'reporting', component: Reporting },
+  { path: 'new-account', component: NewAccount },
 ];
