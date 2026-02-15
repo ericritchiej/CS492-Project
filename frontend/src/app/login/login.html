@@ -1,37 +1,142 @@
+<!--
+  This is the login page template. It displays a form where existing
+  customers enter their credentials to sign into their account.
+
+  The overall structure is:
+    1. Page heading
+    2. Error message (shown only when login fails)
+    3. Login form with username and password fields
+    4. Link to create a new account
+-->
 <div class="login-page">
   <h2>Login</h2>
   <p class="subtitle">Sign in to your account</p>
 
-  @if (authStatus()) {
-    <p class="status-message">{{ authStatus()!.message }}</p>
-  }
-  <div *ngIf="signinError" class="error">
-    {{ signinError }}
-  </div>
+  <!--
+    Shows an error message when login fails (e.g. wrong password).
+    signinError is set in login.ts when the backend returns an error.
 
+    *ngIf is the older Angular syntax for conditionally showing elements.
+    The rest of this template uses the newer @if syntax — for consistency
+    this could be updated to:
+      @if (signinError) {
+        <div class="error">{{ signinError }}</div>
+      }
+
+    {{ signinError }} is Angular's "interpolation" syntax — it reads the
+    value of signinError from login.ts and displays it as text.
+    If signinError is "Invalid username or password.", that's what shows here.
+  -->
+  @if (signinError) {
+    <div class="error">
+      {{ signinError }}
+    </div>
+  }
+
+  <!--
+    [formGroup]="loginForm" connects this HTML form to the FormGroup
+    defined in login.ts. Angular will track the value and validation
+    state of every input inside this form automatically.
+
+    (ngSubmit)="onSignin()" calls the onSignin() method in login.ts
+    when the user submits the form (by clicking the button or pressing Enter).
+    Using ngSubmit rather than a click handler is better because it also
+    handles form submission via keyboard, which is important for accessibility.
+  -->
   <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSignin()">
+
     <label>
       Username
+      <!--
+        formControlName="username" links this input to the "username"
+        field defined in the FormGroup in login.ts.
+        Angular automatically reads and writes the value through this link —
+        you never need to manually read input.value in your TypeScript code.
+
+        Note: despite the label saying "Username" and the placeholder saying
+        "Enter your username", this field actually expects an email address.
+        The label and placeholder could be updated to say "Email Address"
+        to avoid confusing users.
+      -->
       <input type="text" formControlName="username" placeholder="Enter your username">
 
+      <!--
+        This block shows validation errors for the username field.
+        It only appears when BOTH conditions are true:
+          1. The field is "invalid" (fails one or more validators)
+          2. The field is "dirty" (user has typed something) OR
+             "touched" (user clicked into and then out of the field)
+
+        We check dirty/touched so errors don't appear before the user
+        has had a chance to interact with the field — showing "required"
+        errors on a blank form before the user does anything is bad UX.
+      -->
       @if (loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)) {
         <div class="field-error">
-          @if (loginForm.get('username')?.errors?.['required']) { <span>Username is required.</span> }
-          @if (loginForm.get('username')?.errors?.['minlength']) { <span>Must be at least 3 characters.</span> }
+          <!--
+            Each @if checks for a specific validation error.
+            These error keys ('required', 'minlength') match the validators
+            defined on the username field in login.ts:
+              username: ['', [Validators.required, Validators.minLength(3)]]
+
+            errors?.['required']   — set when the field is empty
+            errors?.['minlength']  — set when fewer than 3 characters are entered
+          -->
+          @if (loginForm.get('username')?.errors?.['required']) {
+            <span>Username is required.</span>
+          }
+          @if (loginForm.get('username')?.errors?.['minlength']) {
+            <span>Must be at least 3 characters.</span>
+          }
         </div>
       }
     </label>
+
     <label>
       Password
+      <!--
+        type="password" tells the browser to mask the input with dots
+        so the password isn't visible on screen — this is a basic but
+        important security measure.
+      -->
       <input type="password" formControlName="password" placeholder="Enter your password">
 
+      <!--
+        Same pattern as the username validation above — only shows
+        when the field is invalid AND the user has interacted with it.
+        Password only has one validator (required) so there's only one error to show.
+      -->
       @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
         <div class="field-error">
-          @if (loginForm.get('password')?.errors?.['required']) { <span>Password is required.</span> }
+          @if (loginForm.get('password')?.errors?.['required']) {
+            <span>Password is required.</span>
+          }
         </div>
       }
     </label>
+
+    <!--
+      [disabled]="loginForm.invalid" grays out and disables the button
+      while any field in the form fails validation.
+      This prevents the user from submitting an incomplete form,
+      though onSignin() also checks validity as a second layer of protection.
+
+      Note: disabling the button can frustrate users who haven't
+      interacted with the form yet and don't know why it's disabled.
+      An alternative approach is to leave the button enabled and only
+      show errors after the user tries to submit — which is what
+      markAllAsTouched() in login.ts handles.
+    -->
     <button type="submit" [disabled]="loginForm.invalid">Sign In</button>
+
   </form>
+
+  <!--
+    A link to the registration page for users who don't have an account yet.
+    routerLink="/new-account" uses Angular's router to navigate without
+    a full page reload, which is faster than a regular href link.
+    The route "/new-account" is defined in app.routes.ts.
+  -->
   <a routerLink="/new-account" class="confirmation-link">Create an Account</a>
+
 </div>

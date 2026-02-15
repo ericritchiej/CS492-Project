@@ -1,25 +1,226 @@
+<!--
+  This is the new account registration page template.
+  It collects all the information needed to create a customer account:
+    1. Personal info (name and phone)
+    2. Address
+    3. Account credentials (email and password)
+
+  The form is divided into sections using form-section divs to make
+  it easier for the user to fill out step by step.
+-->
 <div class="login-page">
-  <h2>Login</h2>
-  <p class="subtitle">Sign in to your account</p>
+  <h2>Create Account</h2>
+  <p class="subtitle">Fill in your details below</p>
 
-  @if (authStatus()) {
-    <p class="status-message">{{ authStatus()!.message }}</p>
-  }
+  <!--
+    [formGroup]="form" connects this HTML form to the FormGroup defined
+    in newAccount.ts. Angular tracks every field's value and validity automatically.
 
-  <form class="login-form">
-    <label>
-      Email Address
-      <input type="text" placeholder="Enter your Email Address">
-    </label>
-    <label>
-      Password
-      <input type="password" placeholder="Enter your password">
-    </label>
-    <label>
-      Re-enter your Password
-      <input type="password" placeholder="Re-enter your password">
-    </label>
-    <button type="submit">Sign In</button>
-    <button type="button" routerLink="/login">Cancel</button>
+    (ngSubmit)="onSubmit()" calls onSubmit() in newAccount.ts when the user
+    submits the form. Using ngSubmit rather than a button click handler means
+    the form also submits correctly when the user presses Enter.
+  -->
+  <form class="login-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+    <!-- ===================== PERSONAL INFO SECTION ===================== -->
+    <div class="form-section">
+      <h3 class="section-title">Personal Info</h3>
+
+      <!--
+        field-row puts First Name and Last Name side by side on one line.
+        This is controlled by CSS flexbox in newAccount.css — the .field-row
+        class sets display: flex, and each label inside takes equal space.
+      -->
+      <div class="field-row">
+        <label>
+          First Name
+          <!--
+            formControlName="firstName" links this input to the "firstName"
+            field in the FormGroup. Angular automatically reads and writes
+            the value — you never need to manually access input.value.
+          -->
+          <input type="text" formControlName="firstName" placeholder="Jane">
+        </label>
+        <label>
+          Last Name
+          <input type="text" formControlName="lastName" placeholder="Smith">
+        </label>
+      </div>
+
+      <label>
+        Phone Number
+        <!--
+          type="tel" tells mobile browsers to show a numeric keypad
+          instead of a full keyboard, making it easier to enter phone numbers.
+        -->
+        <input type="tel" formControlName="phone" placeholder="(555) 555-5555"/>
+      </label>
+
+      <!--
+        Phone validation errors — only shown when the field is invalid AND touched.
+        "touched" means the user has clicked into and then out of the field,
+        preventing errors from showing before the user has had a chance to type.
+
+        The outer @if checks if the field is invalid and touched.
+        The inner @if checks which specific error occurred so we can show
+        the most helpful message for each case.
+      -->
+      @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
+        @if (form.get('phone')?.errors?.['required']) {
+          <span class="field-error">Phone number is required.</span>
+        }
+        @if (form.get('phone')?.errors?.['pattern']) {
+          <!--
+            'pattern' error means the value didn't match the regex defined
+            in newAccount.ts: /^\+?[\d\s\-\(\)]{7,15}$/
+            This allows formats like (555) 555-5555 or +1-555-555-5555
+          -->
+          <span class="field-error">Please enter a valid phone number.</span>
+        }
+      }
+    </div>
+
+    <!-- ===================== ADDRESS SECTION ===================== -->
+    <div class="form-section">
+      <h3 class="section-title">Address</h3>
+
+      <label>
+        Street Address
+        <input type="text" formControlName="address1" placeholder="123 Main St">
+      </label>
+
+      <label>
+        <!--
+          "(optional)" in the label lets the user know they don't have to
+          fill this in. The address2 field has no Validators.required in
+          newAccount.ts, so the form will be valid even if left blank.
+        -->
+        Apartment, suite, etc. (optional)
+        <input type="text" formControlName="address2" placeholder="Apt 4B">
+      </label>
+
+      <!--
+        City, State, and Zip are placed in a field-row so they appear
+        on one line. The CSS classes "grow" and "shrink" control how much
+        space each field takes:
+          .grow  — city gets more space (flex: 2) since city names are longer
+          .shrink — state and zip get less space (flex: 0.75) since they're short
+      -->
+      <div class="field-row">
+        <label class="grow">
+          City
+          <input type="text" formControlName="city" placeholder="Chicago">
+        </label>
+        <label class="shrink">
+          State
+          <!--
+            maxlength="2" limits the state field to 2 characters (e.g. "IL", "CA").
+            This is a basic HTML constraint — it doesn't replace server-side validation
+            but prevents obvious mistakes and improves the user experience.
+          -->
+          <input type="text" formControlName="state" placeholder="IL" maxlength="2">
+        </label>
+        <label class="shrink">
+          Zip Code
+          <!--
+            maxlength="5" limits to a standard US 5-digit zip code.
+            Like the state field, this is a UX convenience, not a security measure.
+          -->
+          <input type="text" formControlName="zip" placeholder="60601" maxlength="5">
+        </label>
+      </div>
+    </div>
+
+    <!-- ===================== ACCOUNT SECTION ===================== -->
+    <div class="form-section">
+      <h3 class="section-title">Account</h3>
+
+      <label>
+        Email Address
+        <!--
+          type="email" tells the browser this is an email field.
+          On mobile it shows an optimized keyboard with @ and .com keys.
+          The browser may also do basic email format validation, though
+          Angular's Validators.email in newAccount.ts handles this more reliably.
+        -->
+        <input type="email" formControlName="email" placeholder="jane@example.com">
+      </label>
+
+      <label>
+        Password
+        <!--
+          type="password" masks the input so the password isn't visible on screen.
+          This is important for security — without it, anyone nearby could see
+          the password being typed.
+        -->
+        <input type="password" formControlName="password" placeholder="Enter your password">
+      </label>
+
+      <label>
+        Re-enter Password
+        <input type="password" formControlName="confirmPassword" placeholder="Confirm your password">
+      </label>
+
+      <!--
+        Shows an error when the password and confirmPassword fields don't match.
+
+        Note that we check form.errors (the whole form's errors) rather than
+        a single field's errors. This is because passwordMatchValidator() in
+        newAccount.ts is attached to the FORM GROUP, not an individual field,
+        since it needs to read two fields at once to compare them.
+
+        We also check that confirmPassword has been touched so this error
+        doesn't appear before the user has tried to fill in both fields.
+      -->
+      @if (form.errors?.['passwordMismatch'] && form.get('confirmPassword')?.touched) {
+        <span class="field-error">Passwords do not match.</span>
+      }
+    </div>
+
+    <!-- ===================== FEEDBACK MESSAGES ===================== -->
+
+    <!--
+      errorMessage() and successMessage() are signals defined in newAccount.ts.
+      The () is required to read a signal's value — without it you'd get
+      the signal object itself, not the text inside it.
+
+      errorMessage is set when the backend returns an error (e.g. "Email already exists").
+      successMessage is available if we ever want to show a success message before
+      redirecting — currently we navigate immediately on success without showing one.
+    -->
+    @if (errorMessage()) {
+      <p class="status-message">{{ errorMessage() }}</p>
+    }
+    @if (successMessage()) {
+      <p class="success-message">{{ successMessage() }}</p>
+    }
+
+    <!-- ===================== BUTTONS ===================== -->
+    <div class="button-row">
+      <!--
+        [disabled]="isLoading()" grays out the button while the registration
+        request is in progress. This prevents the user from clicking multiple
+        times and accidentally submitting duplicate registrations.
+
+        The button text changes dynamically using a ternary expression:
+          condition ? 'value if true' : 'value if false'
+        isLoading() is a signal — it returns true while the HTTP request
+        is in flight and false otherwise.
+      -->
+      <button type="submit" [disabled]="isLoading()">
+        {{ isLoading() ? 'Creating Account...' : 'Create Account' }}
+      </button>
+
+      <!--
+        type="button" is important here — without it, any button inside a
+        <form> defaults to type="submit" which would trigger form submission
+        when the user clicks Cancel. type="button" prevents that.
+
+        routerLink="/login" navigates back to the login page using Angular's
+        router so the page doesn't fully reload.
+      -->
+      <button type="button" routerLink="/login">Cancel</button>
+    </div>
+
   </form>
 </div>

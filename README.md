@@ -14,13 +14,14 @@ Log file = C:\logs\pizzastore
 
 You need two things installed on your machine before you can run this project:
 
-1. **Java 8 (JDK 1.8)**
-   - Download: https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html
+1. **Java 17 (JDK 17)**
+   - Download: https://www.oracle.com/java/technologies/downloads/#java17
+   - If you previously had Java 8 installed, you must update your `JAVA_HOME` environment variable to point to the new JDK 17 directory (see Terminal 1 below).
    - After installing, verify by opening a Command Prompt and running:
      ```cmd
      java -version
      ```
-     You should see something like `java version "1.8.0_xxx"`.
+     You should see something like `java version "17.0.x"`.
 
 2. **Node.js 18 or higher** (includes npm)
    - Download: https://nodejs.org/
@@ -43,9 +44,9 @@ You will need **two separate Command Prompt windows** open at the same time.
    ```cmd
    cd C:\Users\ericr\IdeaProjects\PizzaStore
    ```
-3. Set JAVA_HOME to your Java 8 installation (adjust the path if yours is different):
+3. Set JAVA_HOME to your Java 17 installation (adjust the path if yours is different):
    ```cmd
-   set JAVA_HOME=C:\Program Files\Java\jdk-1.8
+   set JAVA_HOME=C:\Program Files\Java\jdk-17
    ```
 4. Start the Spring Boot backend:
    ```cmd
@@ -78,15 +79,15 @@ Open your browser and go to:
 http://localhost:4200
 ```
 
-You will see the **Pizza Store** header with a navigation bar containing:
+You will see the **Pizza Store** header with a navigation bar. After logging in or creating an account, the logged-in user's name is displayed in the nav bar. The nav contains:
 
 - **Menu** — Browse the pizza menu with crust types and prices
 - **Restaurant Info** — View the restaurant name, address, phone, and hours
 - **User Tools** (dropdown) — Hover to reveal:
   - **Previous Orders** — View order history and delivery status
   - **Profile** — View customer profile details
-  - **Login** — Sign-in page with username/password fields
-  - **New Account** — Create a new account with email and password
+  - **Login** — Sign-in page with username/password fields and form validation
+  - **New Account** — Create a new account with personal info, address, email, and password
   - **Admin** — Store dashboard with daily stats (links to Reporting)
 - **Shopping Cart** (cart icon) — View cart items and total
   - Links to the **Order Confirmation & Payment** page (Checkout)
@@ -109,12 +110,13 @@ PizzaStore/
 │   └── com/pizzastore/                  # Java backend (Spring Boot)
 │       ├── PizzaStoreApplication.java   # Application entry point
 │       ├── model/                       # Data models
-│       │   └── User.java               # User account model
+│       │   ├── User.java               # User account model
+│       │   └── Address.java            # Customer address model
 │       ├── repository/                  # Database repositories
-│       │   └── UserRepository.java      # User lookup queries
+│       │   └── UserRepository.java      # User lookup and registration queries
 │       └── controller/
 │           ├── PizzaController.java     # Pizzas, orders, stats endpoints
-│           ├── AuthController.java      # Authentication & sign-in
+│           ├── AuthController.java      # Authentication, sign-in & registration
 │           ├── RestaurantInfoController.java # Restaurant details
 │           ├── ProfileController.java   # Customer profile
 │           ├── CartController.java      # Shopping cart
@@ -154,6 +156,7 @@ The backend exposes the following REST endpoints:
 | `GET /api/stats` | Get store statistics |
 | `GET /api/auth/status` | Get authentication status |
 | `POST /api/auth/signin` | Sign in with username and password |
+| `POST /api/auth/register` | Register a new account with personal info, address, and credentials |
 | `GET /api/restaurant-info` | Get restaurant name, address, phone, hours |
 | `GET /api/profile` | Get customer profile |
 | `GET /api/cart` | Get shopping cart items and total |
@@ -196,9 +199,10 @@ The app uses Spring Security with BCrypt password hashing. Passwords in the data
 - **`mvnw.cmd` shows "Downloading Maven Wrapper..."** — This is normal on first run. It downloads the Maven wrapper jar automatically.
 - **`npm install` is slow** — This is normal the first time. It downloads all Angular dependencies.
 - **Port 8080 or 4200 already in use** — Another application is using that port. Stop it or change the port in `src/main/resources/application.properties` (backend) or use `npx ng serve --port 4300` (frontend).
-- **Java not found** — Make sure Java 8 is installed and `java` is in your system PATH. You can also set `JAVA_HOME` to your JDK directory:
+- **Java not found** — Make sure Java 17 is installed and `java` is in your system PATH. You can also set `JAVA_HOME` to your JDK directory:
   ```cmd
-  set JAVA_HOME=C:\Program Files\Java\jdk-1.8
+  set JAVA_HOME=C:\Program Files\Java\jdk-17
   ```
-- **"No compiler is provided" error** — You have a JRE but not a JDK. Make sure `JAVA_HOME` points to a JDK (not JRE) installation, and that you set it before running `mvnw.cmd`.
+- **"No compiler is provided" error** — You have a JRE but not a JDK. Make sure `JAVA_HOME` points to a JDK 17 (not JRE) installation, and that you set it before running `mvnw.cmd`.
+- **Upgrading from Java 8** — If you previously had Java 8 installed, you need to install JDK 17 and update your `JAVA_HOME` environment variable. The old Java 8 JDK will no longer work with this project.
 - **Frontend can't reach backend API** — Make sure the backend is running on port 8080 before starting the frontend. The Angular dev server proxies `/api` requests to `localhost:8080`.
