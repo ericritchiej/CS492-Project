@@ -110,10 +110,17 @@ PizzaStore/
 │   └── com/pizzastore/                  # Java backend (Spring Boot)
 │       ├── PizzaStoreApplication.java   # Application entry point
 │       ├── model/                       # Data models
-│       │   ├── User.java               # User account model
-│       │   └── Address.java            # Customer address model
+│       │   ├── User.java               # Customer account model
+│       │   ├── Employee.java           # Employee account model
+│       │   ├── Address.java            # Customer address model
+│       │   ├── CrustType.java          # Pizza crust option model
+│       │   └── LoginType.java          # Enum: WORKER, CUSTOMER, UNKNOWN
+│       ├── service/
+│       │   └── UserTypeResolver.java    # Resolves login type from email domain
 │       ├── repository/                  # Database repositories
-│       │   └── UserRepository.java      # User lookup and registration queries
+│       │   ├── UserRepository.java      # Customer lookup and registration queries
+│       │   ├── EmployeeRepository.java  # Employee lookup queries
+│       │   └── CrustTypeRepository.java # Crust type queries
 │       └── controller/
 │           ├── PizzaController.java     # Pizzas, orders, stats endpoints
 │           ├── AuthController.java      # Authentication, sign-in & registration
@@ -129,6 +136,7 @@ PizzaStore/
 │   └── src/app/
 │       ├── app.ts, app.html, app.css    # Root component with nav bar
 │       ├── app.routes.ts                # Route definitions
+│       ├── auth.service.ts              # Shared auth state (logged-in user)
 │       ├── menu/                        # Menu page
 │       ├── orders/                      # Previous Orders page
 │       ├── admin/                       # Admin dashboard
@@ -155,8 +163,10 @@ The backend exposes the following REST endpoints:
 | `GET /api/orders` | List all orders |
 | `GET /api/stats` | Get store statistics |
 | `GET /api/auth/status` | Get authentication status |
-| `POST /api/auth/signin` | Sign in with username and password |
-| `POST /api/auth/register` | Register a new account with personal info, address, and credentials |
+| `POST /api/auth/identify` | Identify user type (WORKER/CUSTOMER) from email domain |
+| `POST /api/auth/signin/customer` | Sign in as a customer with email and password |
+| `POST /api/auth/signin/employee` | Sign in as an employee with email and password |
+| `POST /api/auth/register/new/customer` | Register a new customer account with personal info, address, and credentials |
 | `GET /api/restaurant-info` | Get restaurant name, address, phone, hours |
 | `GET /api/profile` | Get customer profile |
 | `GET /api/cart` | Get shopping cart items and total |
@@ -193,6 +203,15 @@ java -jar target/pizza-store-0.0.1-SNAPSHOT.jar
 ## Security
 
 The app uses Spring Security with BCrypt password hashing. Passwords in the database are stored as BCrypt hashes, not plain text. The security configuration lives in `SecurityBeans.java` in the root source package (`src/main/java/`).
+
+## Authentication Flow
+
+Login uses a two-step process:
+
+1. **Identify** — The user enters their email. The backend's `UserTypeResolver` checks the email domain against the company domain configured in `application.properties` (`company.email.domain`). Emails matching the company domain are routed to the employee login flow; all others are routed to the customer login flow.
+2. **Sign in** — The frontend calls the appropriate endpoint (`/api/auth/signin/customer` or `/api/auth/signin/employee`) with the email and password. The backend verifies the password against the BCrypt hash in the database and returns a user DTO (excluding the password hash) on success.
+
+New customers can register via the **New Account** page, which collects personal info, address, and credentials. After registration, the user is automatically logged in. The logged-in user's name is displayed in the nav bar across all pages via the shared `AuthService`.
 
 ## Troubleshooting
 

@@ -1,9 +1,14 @@
 package com.pizzastore.controller;
 
 import com.pizzastore.model.Address;
+import com.pizzastore.model.Employee;
+import com.pizzastore.model.LoginType;
 import com.pizzastore.model.User;
+import com.pizzastore.repository.EmployeeRepository;
 import com.pizzastore.repository.UserRepository;
+import com.pizzastore.service.UserTypeResolver;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -71,6 +76,9 @@ public class AuthController {
      * which helps prevent accidental bugs.
      */
     private final UserRepository userRepository;
+    // user type resolver tells us if it's a customer, employee or unknown
+    private final UserTypeResolver userTypeResolver;
+    private final EmployeeRepository employeeRepository;
 
     /**
      * PasswordEncoder handles hashing passwords using the BCrypt algorithm.
@@ -85,9 +93,12 @@ public class AuthController {
      * Spring sees that we need a UserRepository and automatically "injects" one for us.
      * This pattern is called Dependency Injection, and it means we don't have to
      * manually create objects with "new UserRepository()" — Spring manages that for us.
+     * same for usertyuperesolver
      */
-    public AuthController(UserRepository userRepository) {
+    public AuthController(UserRepository userRepository, UserTypeResolver userTypeResolver, EmployeeRepository employeeRepository) {
         this.userRepository = userRepository;
+        this.userTypeResolver = userTypeResolver;
+        this.employeeRepository = employeeRepository;
     }
 
     /**
@@ -109,6 +120,32 @@ public class AuthController {
     }
 
     /**
+     * Step 1 — Identify the user type from their email.
+     *
+     * The frontend calls this as soon as the user submits their email.
+     * The response tells the frontend whether to proceed as a WORKER
+     * or CUSTOMER, allowing it to adjust the UI before the password step.
+     *
+     * Returns 400 if the email is missing or malformed.
+     */
+    @PostMapping("/identify")
+    public ResponseEntity<?> identify(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        LoginType loginType = userTypeResolver.resolve(email);
+        logger.info("loginType = {}", loginType.toString());
+
+        if (loginType == LoginType.UNKNOWN) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "A valid email address is required."
+            ));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "loginType", loginType
+        ));
+    }
+
+    /**
      * @PostMapping means this method responds to HTTP POST requests.
      * POST requests are used when sending data to the server, like form submissions.
      *
@@ -119,8 +156,8 @@ public class AuthController {
      * ResponseEntity<?> lets us control the HTTP status code we send back.
      * The "?" means it can return different types depending on success or failure.
      */
-    @PostMapping("/signin")
-    public ResponseEntity<?> handleSignIn(
+    @PostMapping("/signin/customer")
+    public ResponseEntity<?> handleCustomerSignIn(
             @RequestParam("username") String username,
             @RequestParam("password") String password) {
 
@@ -128,6 +165,19 @@ public class AuthController {
         // Notice we log the username but NOT the password in plain text —
         // passwords should never appear in log files.
         logger.info("Sign-in attempt for user: {}", username);
+
+        // Resolve the login type from the email domain.
+        // WORKER emails match the company domain configured in application.properties.
+        // We do this here on the backend rather than trusting anything sent from the
+        // frontend — the frontend loginType should only drive UI, not security decisions.
+        LoginType loginType = userTypeResolver.resolve(username);
+        logger.info("Resolved login type: {}", loginType);
+
+        if (loginType != LoginType.CUSTOMER) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Invalid user type of customer.");
+            return ResponseEntity.status(401).body(error);
+        }
 
         // Ask the repository to look up the user by their email address.
         // This returns a List because findByUsername could theoretically find
@@ -154,6 +204,7 @@ public class AuthController {
                 userDto.put("email", user.getEmail());
                 userDto.put("firstName", user.getFirstName());
                 userDto.put("lastName", user.getLastName());
+                userDto.put("role", "Customer");
 
                 // Build the full response with a message and the user data.
                 // ResponseEntity.ok() sends back HTTP status 200, which means "Success".
@@ -179,13 +230,90 @@ public class AuthController {
     }
 
     /**
+     * @PostMapping means this method responds to HTTP POST requests.
+     * POST requests are used when sending data to the server, like form submissions.
+     *
+     * @RequestParam means the data comes in as URL parameters or form fields,
+     * NOT as JSON. For example: /api/auth/signin?username=jane&password=abc
+     * This is different from @RequestBody which expects JSON.
+     *
+     * ResponseEntity<?> lets us control the HTTP status code we send back.
+     * The "?" means it can return different types depending on success or failure.
+     */
+    @PostMapping("/signin/employee")
+    public ResponseEntity<?> handleEmployeeSignIn(
+            @RequestParam("username") String username,
+            @RequestParam("password") String password) {
+
+        // Log the sign-in attempt so we can monitor activity on the server.
+        // Notice we log the username but NOT the password in plain text —
+        // passwords should never appear in log files.
+        logger.info("Sign-in attempt for employee: {}", username);
+
+        // Resolve the login type from the email domain.
+        // WORKER emails match the company domain configured in application.properties.
+        // We do this here on the backend rather than trusting anything sent from the
+        // frontend — the frontend loginType should only drive UI, not security decisions.
+        LoginType loginType = userTypeResolver.resolve(username);
+        logger.info("Resolved login type: {}", loginType);
+
+        if (loginType != LoginType.WORKER) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Invalid user type for worker.");
+            return ResponseEntity.status(401).body(error);
+        }
+
+        // Ask the repository to look up the employee by their email address.
+        // This returns a List because findByUsername could theoretically find
+        // multiple results, even though we expect just one.
+        List<Employee> employees = employeeRepository.findByUsername(username);
+
+        if (employees != null && !employees.isEmpty()) {
+            // Get the first (and should be only) user from the list
+            Employee employee = employees.get(0);
+            logger.info("Found employee: {}", employee.getEmail());
+            // passwordEncoder.matches() compares the plain text password the user
+            // typed with the hashed version stored in the database.
+            // We never "decrypt" the hash — instead BCrypt re-hashes the input
+            // and checks if it matches. This is the secure way to verify passwords.
+            if (passwordEncoder.matches(password, employee.getPassword())) {
+
+                // We create a "DTO" (Data Transfer Object) — a trimmed down version
+                // of the user that only includes safe, necessary fields.
+                // We deliberately exclude the password hash so it's never sent
+                // back to the browser, even in hashed form.
+                Map<String, Object> userDto = new HashMap<>();
+                userDto.put("id", employee.getEmployeeId());
+                userDto.put("email", employee.getEmail());
+                userDto.put("firstName", employee.getFirstName());
+                userDto.put("lastName", employee.getLastName());
+                userDto.put("role", employee.getRole());
+
+                logger.info(employee.getRole());
+
+                // Build the full response with a message and the user data.
+                // ResponseEntity.ok() sends back HTTP status 200, which means "Success".
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "Employee Login successful");
+                response.put("user", userDto);
+
+                return ResponseEntity.ok(response);
+            }
+        }
+
+        Map<String, String> error = new HashMap<>();
+        error.put("message", "Invalid userid or password.");
+        return ResponseEntity.status(401).body(error);
+    }
+
+    /**
      * This endpoint handles new account registration.
      *
      * @RequestBody means Spring will read the JSON body that Angular sends
      * and automatically map it to our RegisterRequest record.
      * This is different from @RequestParam which reads URL parameters.
      */
-    @PostMapping("/register")
+    @PostMapping("/register/new/customer")
     public ResponseEntity<?> handleRegister(@RequestBody RegisterRequest request) {
         logger.info("Register attempt for email: {}", request.email());
 
@@ -247,4 +375,5 @@ public class AuthController {
         // a new resource was successfully created on the server.
         return ResponseEntity.status(201).body(response);
     }
+
 }

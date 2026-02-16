@@ -1,5 +1,6 @@
 package com.pizzastore.repository;
 
+import com.pizzastore.model.Employee;
 import com.pizzastore.model.User;
 import com.pizzastore.model.Address;
 import org.jooq.DSLContext;
@@ -80,41 +81,16 @@ public class UserRepository {
         //   FROM customers
         //   WHERE email = ?
         //
-        // We list each column explicitly rather than using SELECT * for two reasons:
-        //   1. We only fetch the data we actually need, which is faster
-        //   2. It makes the code self-documenting — you can see exactly what fields
-        //      are being returned without looking at the database schema
-        //
-        // We define the query here but don't execute it yet — this lets us
-        // log the SQL before running it, which is helpful for debugging.
-        Select<?> query = dsl.select(
+        return dsl.select(
                         DSL.field("email", String.class),
-                        // .as("first_name") ensures jOOQ maps this column to the
-                        // "firstName" field on the User class (via the @Column annotation)
                         DSL.field("first_name", String.class).as("first_name"),
                         DSL.field("last_name", String.class).as("last_name"),
                         DSL.field("phone_number", String.class).as("phone_number"),
                         DSL.field("password_hash", String.class).as("password_hash")
                 )
                 .from(DSL.table("customers"))
-                // .eq() means "equals" — this is the WHERE clause
-                // jOOQ uses ? placeholders internally to prevent SQL injection attacks,
-                // which is where a malicious user tries to sneak SQL code into an input field
-                .where(DSL.field("email").eq(username));
-
-        // Log the SQL with placeholders (safe to log — no real values exposed)
-        // Example output: "SELECT email, first_name ... WHERE email = ?"
-        logger.info("SQL: " + query.getSQL());
-
-        // Log the SQL with actual values filled in — useful for debugging
-        // but should be removed or disabled in production since it exposes
-        // the actual email address being searched
-        logger.info("Full SQL: " + dsl.renderInlined(query));
-
-        // Execute the query and map each row of results into a User object.
-        // fetchInto(User.class) tells jOOQ to automatically match column names
-        // to fields on the User class using the @Column annotations we defined.
-        return query.fetchInto(User.class);
+                .where(DSL.field("email").eq(username))
+                .fetchInto(User.class);
     }
 
     /**

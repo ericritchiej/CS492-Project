@@ -29,6 +29,7 @@ type RegisterResponse = {
     email: string;
     firstName: string;
     lastName: string;
+    role: string;
   };
 };
 
@@ -237,7 +238,7 @@ export class NewAccount implements OnInit {
      *   next  — called when the request succeeds (HTTP 2xx response)
      *   error — called when the request fails (HTTP 4xx or 5xx response)
      */
-    this.http.post<RegisterResponse>('/api/auth/register', payload).subscribe({
+    this.http.post<RegisterResponse>('/api/auth/register/new/customer', payload).subscribe({
       next: (res) => {
         this.isLoading.set(false);
 
