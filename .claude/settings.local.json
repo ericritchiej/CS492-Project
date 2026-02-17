@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd.exe:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(set \"JAVA_HOME=C:\\\\Program Files\\\\Java\\\\jdk-1.8\")",
+      "Bash(mvnw.cmd compile:*)",
+      "Bash(cmd /c \"set JAVA_HOME=C:\\\\Program Files\\\\Java\\\\jdk-1.8 && mvnw.cmd compile\")",
+      "Bash(cmd /c \"npx ng build\")",
+      "Bash(cmd /c:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-1.8\" C:/Users/ericr/IdeaProjects/PizzaStore/mvnw.cmd:*)",
+      "Bash(npx ng build:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-1.8\" C:/Users/ericr/IdeaProjects/PizzaStore/mvnw.cmd spring-boot:run:*)",
+      "Bash(npx ng serve)",
+      "Bash(export JAVA_HOME=\"/c/Users/ericr/.jdks/temurin-17.0.18\":*)",
+      "Bash(./mvnw.cmd test:*)"
+    ]
+  }
+}
