@@ -4,6 +4,7 @@ import com.pizzastore.model.LoginType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+
 /**
  * Resolves the type of user attempting to log in based on their email domain.
  *

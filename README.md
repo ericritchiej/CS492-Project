@@ -147,6 +147,14 @@ PizzaStore/
 │       ├── cart/                        # Shopping Cart page
 │       ├── checkout/                    # Order Confirmation & Payment page
 │       └── reporting/                   # Reporting page
+├── src/test/java/com/pizzastore/        # Unit tests (JUnit 5 + Mockito)
+│   ├── service/
+│   │   └── UserTypeResolverTest.java    # Tests for email domain routing logic
+│   └── controller/
+│       ├── AuthControllerTest.java      # Tests for login, registration, identify
+│       ├── PizzaControllerTest.java     # Tests for menu, orders, stats endpoints
+│       └── CheckoutControllerTest.java  # Tests for checkout summary math
+├── .github/workflows/ci.yml            # GitHub Actions — runs tests on push/PR
 ├── pom.xml                              # Maven build configuration
 ├── mvnw.cmd                             # Maven wrapper (no Maven install needed)
 └── .mvn/wrapper/                        # Maven wrapper support files
@@ -175,12 +183,54 @@ The backend exposes the following REST endpoints:
 
 During development, the Angular proxy (`proxy.conf.json`) forwards `/api` requests from port 4200 to the backend on port 8080.
 
+## Running Tests
+
+The project uses **JUnit 5** for unit tests and **Mockito** for mocking dependencies (like the database). Tests live in `src/test/java/` and mirror the same package structure as the main code.
+
+### Run tests from the command line
+
+Open a Command Prompt in the project folder and run:
+
+```cmd
+mvnw.cmd test
+```
+
+This compiles the code and runs all tests. You will see output like:
+
+```
+Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+If any test fails, the output will show which test failed and why.
+
+### Run tests in IntelliJ
+
+- **Run all tests** — Right-click on the `src/test/java` folder in the Project panel and select **Run 'All Tests'**. If you don't see this option, first right-click the folder → **Mark Directory as** → **Test Sources Root** (the folder should turn green), then try again.
+- **Run a single test class** — Open a test file (e.g. `UserTypeResolverTest.java`) and click the green play icon in the gutter next to the class name.
+- **Run a single test method** — Click the green play icon next to any individual `@Test` method.
+
+Results appear in IntelliJ's **Run** panel at the bottom with green checkmarks (pass) or red X's (fail).
+
+### Tests run automatically during the build
+
+When you build the project with `mvnw.cmd package`, Maven automatically runs all tests first. If any test fails, the build stops and no jar file is produced. This prevents broken code from being packaged.
+
+### Tests run automatically on GitHub (CI)
+
+The project includes a GitHub Actions workflow (`.github/workflows/ci.yml`) that runs all tests automatically whenever you:
+
+- **Push** to `main` or any `feature/` branch
+- **Open a pull request** targeting `main`
+
+You can see the results on GitHub by clicking the **Actions** tab in the repository. Pull requests will show a green checkmark or red X next to each commit indicating whether tests passed.
+
 ## Building for Production
 
 ### Build the backend
 
 ```cmd
-mvnw.cmd package -DskipTests
+mvnw.cmd package
 ```
 
 This creates `target/pizza-store-0.0.1-SNAPSHOT.jar`.
