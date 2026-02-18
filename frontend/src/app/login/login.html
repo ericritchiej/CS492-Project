@@ -10,13 +10,13 @@
   <h2>Login</h2>
   <p class="subtitle">Sign in to your account</p>
 
-  @if (signinError) {
+  @if (signInError) {
     <div class="error">
-      {{ signinError }}
+      {{ signInError }}
     </div>
   }
 
-  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSignin()">
+  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSignIn()">
 
     <label>
       Email Address

@@ -16,7 +16,22 @@
       "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-1.8\" C:/Users/ericr/IdeaProjects/PizzaStore/mvnw.cmd spring-boot:run:*)",
       "Bash(npx ng serve)",
       "Bash(export JAVA_HOME=\"/c/Users/ericr/.jdks/temurin-17.0.18\":*)",
-      "Bash(./mvnw.cmd test:*)"
+      "Bash(./mvnw.cmd test:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(\"/c/Program Files/Java/jdk-1.8/bin/javac\" -version)",
+      "Bash(where:*)",
+      "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Program Files'' -Directory | Where-Object { $_.Name -match ''jdk|java|adoptium|temurin|corretto|zulu'' } | Select-Object -ExpandProperty FullName\")",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
+      "Bash(java:*)",
+      "Bash(./mvnw test:*)",
+      "Bash(powershell.exe -Command \"[System.Environment]::SetEnvironmentVariable\\(''JAVA_HOME'', ''C:\\\\Users\\\\ericr\\\\.jdks\\\\temurin-17.0.18'', ''User''\\)\")",
+      "WebSearch",
+      "WebFetch(domain:endoflife.date)",
+      "WebFetch(domain:mvnrepository.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(ls:*)",
+      "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" ls-files:*)",
+      "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" diff main...feature/employee-login --name-only)"
     ]
   }
 }

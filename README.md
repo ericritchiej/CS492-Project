@@ -7,7 +7,7 @@ A full-stack pizza store application with a Java Spring Boot backend and an Angu
 All passwords are Pizza123!
 
 
-## Loggin
+## Logging
 Log file = C:\logs\pizzastore
 
 ## Prerequisites
@@ -106,9 +106,9 @@ Press `Ctrl+C` in each Command Prompt window to stop the servers.
 ```
 PizzaStore/
 ├── src/main/java/
-│   ├── SecurityBeans.java               # Spring Security config (BCrypt, CORS)
 │   └── com/pizzastore/                  # Java backend (Spring Boot)
 │       ├── PizzaStoreApplication.java   # Application entry point
+│       ├── SecurityBeans.java           # Spring Security config (BCrypt password hashing)
 │       ├── model/                       # Data models
 │       │   ├── User.java               # Customer account model
 │       │   ├── Employee.java           # Employee account model
@@ -172,8 +172,8 @@ The backend exposes the following REST endpoints:
 | `GET /api/stats` | Get store statistics |
 | `GET /api/auth/status` | Get authentication status |
 | `POST /api/auth/identify` | Identify user type (WORKER/CUSTOMER) from email domain |
-| `POST /api/auth/signin/customer` | Sign in as a customer with email and password |
-| `POST /api/auth/signin/employee` | Sign in as an employee with email and password |
+| `POST /api/auth/signIn/customer` | Sign in as a customer with email and password |
+| `POST /api/auth/signIn/employee` | Sign in as an employee with email and password |
 | `POST /api/auth/register/new/customer` | Register a new customer account with personal info, address, and credentials |
 | `GET /api/restaurant-info` | Get restaurant name, address, phone, hours |
 | `GET /api/profile` | Get customer profile |
@@ -252,7 +252,7 @@ java -jar target/pizza-store-0.0.1-SNAPSHOT.jar
 
 ## Security
 
-The app uses Spring Security with BCrypt password hashing. Passwords in the database are stored as BCrypt hashes, not plain text. The security configuration lives in `SecurityBeans.java` in the root source package (`src/main/java/`).
+The app uses Spring Security with BCrypt password hashing. Passwords in the database are stored as BCrypt hashes, not plain text. The security configuration lives in `SecurityBeans.java` in the `com.pizzastore` package (`src/main/java/com/pizzastore/`).
 
 ## Authentication Flow
 

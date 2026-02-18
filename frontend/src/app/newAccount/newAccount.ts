@@ -159,7 +159,7 @@ export class NewAccount implements OnInit {
       lastName:        ['', Validators.required],
       // The regex pattern allows digits, spaces, dashes, and parentheses
       // to support formats like (555) 555-5555 or +1-555-555-5555
-      phone:           ['', [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]{7,15}$/)]],
+      phone:           ['', [Validators.required, Validators.pattern(/^\+?[\d\s\-()\[\]]{7,15}$/)]],
       address1:        ['', Validators.required],
       address2:        [''],  // optional — no validators
       city:            ['', Validators.required],
@@ -249,7 +249,7 @@ export class NewAccount implements OnInit {
         this.auth.setUser(res.user);
 
         // Navigate to the menu page now that the account is created
-        this.router.navigate(['/menu']);
+        void this.router.navigate(['/menu']);
       },
       error: (err) => {
         // Log the full error to the browser console for debugging.

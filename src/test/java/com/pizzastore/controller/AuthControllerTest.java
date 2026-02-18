@@ -9,6 +9,7 @@ import com.pizzastore.service.UserTypeResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +23,7 @@ class AuthControllerTest {
     private UserRepository userRepository;
     private EmployeeRepository employeeRepository;
     private UserTypeResolver userTypeResolver;
+    private PasswordEncoder passwordEncoder;
     private AuthController controller;
 
     // BCrypt hash of "Pizza123!" — used so passwordEncoder.matches() returns true
@@ -33,7 +35,8 @@ class AuthControllerTest {
         userRepository = mock(UserRepository.class);
         employeeRepository = mock(EmployeeRepository.class);
         userTypeResolver = mock(UserTypeResolver.class);
-        controller = new AuthController(userRepository, userTypeResolver, employeeRepository);
+        passwordEncoder = mock(PasswordEncoder.class);
+        controller = new AuthController(userRepository, userTypeResolver, employeeRepository, passwordEncoder);
     }
 
     // --- identify endpoint ---
@@ -87,8 +90,9 @@ class AuthControllerTest {
                 .encode("Pizza123!");
         user.setPassword(realHash);
         when(userRepository.findByUsername("jane@gmail.com")).thenReturn(List.of(user));
+        when(passwordEncoder.matches("Pizza123!", realHash)).thenReturn(true);
 
-        ResponseEntity<?> response = controller.handleCustomerSignIn("jane@gmail.com", "Pizza123!");
+        ResponseEntity<?> response = controller.handleCustomerSignIn(new AuthController.SignInRequest("jane@gmail.com", "Pizza123!"));
 
         assertEquals(200, response.getStatusCodeValue());
         Map<?, ?> body = (Map<?, ?>) response.getBody();
@@ -109,8 +113,9 @@ class AuthControllerTest {
                 .encode("Pizza123!");
         user.setPassword(realHash);
         when(userRepository.findByUsername("jane@gmail.com")).thenReturn(List.of(user));
+        when(passwordEncoder.matches("WrongPass!", realHash)).thenReturn(false);
 
-        ResponseEntity<?> response = controller.handleCustomerSignIn("jane@gmail.com", "WrongPass!");
+        ResponseEntity<?> response = controller.handleCustomerSignIn(new AuthController.SignInRequest("jane@gmail.com", "WrongPass!"));
 
         assertEquals(401, response.getStatusCodeValue());
     }
@@ -120,7 +125,7 @@ class AuthControllerTest {
         when(userTypeResolver.resolve("nobody@gmail.com")).thenReturn(LoginType.CUSTOMER);
         when(userRepository.findByUsername("nobody@gmail.com")).thenReturn(Collections.emptyList());
 
-        ResponseEntity<?> response = controller.handleCustomerSignIn("nobody@gmail.com", "Pizza123!");
+        ResponseEntity<?> response = controller.handleCustomerSignIn(new AuthController.SignInRequest("nobody@gmail.com", "Pizza123!"));
 
         assertEquals(401, response.getStatusCodeValue());
     }
@@ -129,7 +134,7 @@ class AuthControllerTest {
     void customerSigninRejectsWorkerEmail() {
         when(userTypeResolver.resolve("bob@work.com")).thenReturn(LoginType.WORKER);
 
-        ResponseEntity<?> response = controller.handleCustomerSignIn("bob@work.com", "Pizza123!");
+        ResponseEntity<?> response = controller.handleCustomerSignIn(new AuthController.SignInRequest("bob@work.com", "Pizza123!"));
 
         assertEquals(401, response.getStatusCodeValue());
     }
@@ -149,8 +154,9 @@ class AuthControllerTest {
                 .encode("Pizza123!");
         employee.setPassword(realHash);
         when(employeeRepository.findByUsername("bob@work.com")).thenReturn(List.of(employee));
+        when(passwordEncoder.matches("Pizza123!", realHash)).thenReturn(true);
 
-        ResponseEntity<?> response = controller.handleEmployeeSignIn("bob@work.com", "Pizza123!");
+        ResponseEntity<?> response = controller.handleEmployeeSignIn(new AuthController.SignInRequest("bob@work.com", "Pizza123!"));
 
         assertEquals(200, response.getStatusCodeValue());
         Map<?, ?> body = (Map<?, ?>) response.getBody();
@@ -170,8 +176,9 @@ class AuthControllerTest {
                 .encode("Pizza123!");
         employee.setPassword(realHash);
         when(employeeRepository.findByUsername("bob@work.com")).thenReturn(List.of(employee));
+        when(passwordEncoder.matches("WrongPass!", realHash)).thenReturn(false);
 
-        ResponseEntity<?> response = controller.handleEmployeeSignIn("bob@work.com", "WrongPass!");
+        ResponseEntity<?> response = controller.handleEmployeeSignIn(new AuthController.SignInRequest("bob@work.com", "WrongPass!"));
 
         assertEquals(401, response.getStatusCodeValue());
     }
@@ -180,7 +187,7 @@ class AuthControllerTest {
     void employeeSigninRejectsCustomerEmail() {
         when(userTypeResolver.resolve("jane@gmail.com")).thenReturn(LoginType.CUSTOMER);
 
-        ResponseEntity<?> response = controller.handleEmployeeSignIn("jane@gmail.com", "Pizza123!");
+        ResponseEntity<?> response = controller.handleEmployeeSignIn(new AuthController.SignInRequest("jane@gmail.com", "Pizza123!"));
 
         assertEquals(401, response.getStatusCodeValue());
     }
@@ -190,12 +197,13 @@ class AuthControllerTest {
     @Test
     void registerSucceedsForNewCustomer() {
         when(userRepository.findByUsername("new@gmail.com")).thenReturn(Collections.emptyList());
+        when(passwordEncoder.encode("Pizza123!")).thenReturn(HASHED_PASSWORD);
         when(userRepository.createUser(any(User.class), any(com.pizzastore.model.Address.class)))
                 .thenReturn(42L);
 
         // Use reflection to invoke since RegisterRequest is package-private
         ResponseEntity<?> response = controller.handleRegister(
-                new RegisterRequest("Jane", "Doe", "555-1234",
+                new AuthController.RegisterRequest("Jane", "Doe", "555-1234",
                         "123 Main St", "", "Springfield", "IL", "62701",
                         "new@gmail.com", "Pizza123!"));
 
@@ -215,7 +223,7 @@ class AuthControllerTest {
         when(userRepository.findByUsername("taken@gmail.com")).thenReturn(List.of(existing));
 
         ResponseEntity<?> response = controller.handleRegister(
-                new RegisterRequest("Jane", "Doe", "555-1234",
+                new AuthController.RegisterRequest("Jane", "Doe", "555-1234",
                         "123 Main St", "", "Springfield", "IL", "62701",
                         "taken@gmail.com", "Pizza123!"));
 

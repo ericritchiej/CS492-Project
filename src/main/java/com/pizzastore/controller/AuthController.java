@@ -9,7 +9,6 @@ import com.pizzastore.repository.UserRepository;
 import com.pizzastore.service.UserTypeResolver;
 import org.springframework.http.ResponseEntity;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
@@ -21,41 +20,43 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A "record" is a simple way to define a class that just holds data.
- * It automatically creates getters for each field, so you don't have to
- * write them yourself. This one represents the data Angular sends us
- * when a new user fills out the registration form.
- *
- * When Angular sends JSON like { "firstName": "Jane", "email": "jane@example.com" },
- * Spring automatically maps it to this record.
- */
-record RegisterRequest(
-        String firstName,
-        String lastName,
-        String phone,
-        String address1,
-        String address2,
-        String city,
-        String state,
-        String zip,
-        String email,
-        String password
-) {}
-
-/**
  * A "Controller" is the entry point for HTTP requests coming from the frontend (Angular).
  * Think of it like a receptionist — it receives requests, figures out what to do,
  * and sends back a response.
- *
- * @RestController tells Spring this class handles web requests and automatically
+ * "@RestController" tells Spring this class handles web requests and automatically
  * converts our return values to JSON.
- *
- * @RequestMapping("/api/auth") means every endpoint in this class starts with
- * /api/auth — so our signin URL becomes /api/auth/signin, etc.
+ * "@RequestMapping("/api/auth")" means every endpoint in this class starts with
+ * /api/auth — so our signIn URL becomes /api/auth/signIn, etc.
  */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    /**
+     * A "record" is a simple way to define a class that just holds data.
+     * It automatically creates getters for each field, so you don't have to
+     * write them yourself. This one represents the data Angular sends us
+     * when a new user fills out the registration form.
+     * When Angular sends JSON like { "firstName": "Jane", "email": "jane@example.com" },
+     * Spring automatically maps it to this record.
+     */
+    public record SignInRequest(
+            String username,
+            String password
+    ) {}
+
+    public record RegisterRequest(
+            String firstName,
+            String lastName,
+            String phone,
+            String address1,
+            String address2,
+            String city,
+            String state,
+            String zip,
+            String email,
+            String password
+    ) {}
 
     /**
      * A logger lets us print messages to the server console while the app is running.
@@ -71,7 +72,6 @@ public class AuthController {
      * Rather than writing SQL directly here in the controller, we delegate
      * all database work to the repository. This keeps our code organized —
      * controllers handle HTTP, repositories handle data.
-     *
      * "final" means this reference cannot be reassigned after it's set,
      * which helps prevent accidental bugs.
      */
@@ -86,7 +86,7 @@ public class AuthController {
      * ever breached, hashed passwords are extremely difficult to reverse.
      * BCrypt is a industry-standard algorithm designed specifically for passwords.
      */
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * This is the constructor — Spring calls this automatically when the app starts up.
@@ -95,16 +95,16 @@ public class AuthController {
      * manually create objects with "new UserRepository()" — Spring manages that for us.
      * same for usertyuperesolver
      */
-    public AuthController(UserRepository userRepository, UserTypeResolver userTypeResolver, EmployeeRepository employeeRepository) {
+    public AuthController(UserRepository userRepository, UserTypeResolver userTypeResolver, EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userTypeResolver = userTypeResolver;
         this.employeeRepository = employeeRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
-     * @GetMapping means this method responds to HTTP GET requests.
+     * "@GetMapping" means this method responds to HTTP GET requests.
      * GET requests are used for fetching data without changing anything.
-     *
      * This endpoint (/api/auth/status) is called by Angular when a page loads
      * to check if someone is already logged in. Right now it always returns
      * "not logged in" — in a real app this would check a session or token.
@@ -121,11 +121,9 @@ public class AuthController {
 
     /**
      * Step 1 — Identify the user type from their email.
-     *
      * The frontend calls this as soon as the user submits their email.
      * The response tells the frontend whether to proceed as a WORKER
      * or CUSTOMER, allowing it to adjust the UI before the password step.
-     *
      * Returns 400 if the email is missing or malformed.
      */
     @PostMapping("/identify")
@@ -146,20 +144,18 @@ public class AuthController {
     }
 
     /**
-     * @PostMapping means this method responds to HTTP POST requests.
+     * "@PostMapping" means this method responds to HTTP POST requests.
      * POST requests are used when sending data to the server, like form submissions.
-     *
-     * @RequestParam means the data comes in as URL parameters or form fields,
-     * NOT as JSON. For example: /api/auth/signin?username=jane&password=abc
-     * This is different from @RequestBody which expects JSON.
-     *
+     * "@RequestBody" means Spring reads the JSON body and maps it to our SignInRequest record.
+     * Credentials are sent in the request body (not as URL parameters) so they
+     * don't appear in browser history, server access logs, or proxy logs.
      * ResponseEntity<?> lets us control the HTTP status code we send back.
      * The "?" means it can return different types depending on success or failure.
      */
-    @PostMapping("/signin/customer")
-    public ResponseEntity<?> handleCustomerSignIn(
-            @RequestParam("username") String username,
-            @RequestParam("password") String password) {
+    @PostMapping("/signIn/customer")
+    public ResponseEntity<?> handleCustomerSignIn(@RequestBody SignInRequest request) {
+        String username = request.username();
+        String password = request.password();
 
         // Log the sign-in attempt so we can monitor activity on the server.
         // Notice we log the username but NOT the password in plain text —
@@ -171,7 +167,6 @@ public class AuthController {
         // We do this here on the backend rather than trusting anything sent from the
         // frontend — the frontend loginType should only drive UI, not security decisions.
         LoginType loginType = userTypeResolver.resolve(username);
-        logger.info("Resolved login type: {}", loginType);
 
         if (loginType != LoginType.CUSTOMER) {
             Map<String, String> error = new HashMap<>();
@@ -194,25 +189,8 @@ public class AuthController {
             // We never "decrypt" the hash — instead BCrypt re-hashes the input
             // and checks if it matches. This is the secure way to verify passwords.
             if (passwordEncoder.matches(password, user.getPassword())) {
-
-                // We create a "DTO" (Data Transfer Object) — a trimmed down version
-                // of the user that only includes safe, necessary fields.
-                // We deliberately exclude the password hash so it's never sent
-                // back to the browser, even in hashed form.
-                Map<String, Object> userDto = new HashMap<>();
-                userDto.put("id", user.getId());
-                userDto.put("email", user.getEmail());
-                userDto.put("firstName", user.getFirstName());
-                userDto.put("lastName", user.getLastName());
-                userDto.put("role", "Customer");
-
-                // Build the full response with a message and the user data.
-                // ResponseEntity.ok() sends back HTTP status 200, which means "Success".
-                Map<String, Object> response = new HashMap<>();
-                response.put("message", "Login successful");
-                response.put("user", userDto);
-
-                return ResponseEntity.ok(response);
+                logger.info("Password Match");
+                return ResponseEntity.ok(buildUserResponse("Login successful", user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(), "Customer"));
             }
         }
 
@@ -230,20 +208,18 @@ public class AuthController {
     }
 
     /**
-     * @PostMapping means this method responds to HTTP POST requests.
+     * "@PostMapping" means this method responds to HTTP POST requests.
      * POST requests are used when sending data to the server, like form submissions.
-     *
-     * @RequestParam means the data comes in as URL parameters or form fields,
-     * NOT as JSON. For example: /api/auth/signin?username=jane&password=abc
-     * This is different from @RequestBody which expects JSON.
-     *
+     * "@RequestBody" means Spring reads the JSON body and maps it to our SignInRequest record.
+     * Credentials are sent in the request body (not as URL parameters) so they
+     * don't appear in browser history, server access logs, or proxy logs.
      * ResponseEntity<?> lets us control the HTTP status code we send back.
      * The "?" means it can return different types depending on success or failure.
      */
-    @PostMapping("/signin/employee")
-    public ResponseEntity<?> handleEmployeeSignIn(
-            @RequestParam("username") String username,
-            @RequestParam("password") String password) {
+    @PostMapping("/signIn/employee")
+    public ResponseEntity<?> handleEmployeeSignIn(@RequestBody SignInRequest request) {
+        String username = request.username();
+        String password = request.password();
 
         // Log the sign-in attempt so we can monitor activity on the server.
         // Notice we log the username but NOT the password in plain text —
@@ -277,27 +253,7 @@ public class AuthController {
             // We never "decrypt" the hash — instead BCrypt re-hashes the input
             // and checks if it matches. This is the secure way to verify passwords.
             if (passwordEncoder.matches(password, employee.getPassword())) {
-
-                // We create a "DTO" (Data Transfer Object) — a trimmed down version
-                // of the user that only includes safe, necessary fields.
-                // We deliberately exclude the password hash so it's never sent
-                // back to the browser, even in hashed form.
-                Map<String, Object> userDto = new HashMap<>();
-                userDto.put("id", employee.getEmployeeId());
-                userDto.put("email", employee.getEmail());
-                userDto.put("firstName", employee.getFirstName());
-                userDto.put("lastName", employee.getLastName());
-                userDto.put("role", employee.getRole());
-
-                logger.info(employee.getRole());
-
-                // Build the full response with a message and the user data.
-                // ResponseEntity.ok() sends back HTTP status 200, which means "Success".
-                Map<String, Object> response = new HashMap<>();
-                response.put("message", "Employee Login successful");
-                response.put("user", userDto);
-
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(buildUserResponse("Employee Login successful", employee.getEmployeeId(), employee.getEmail(), employee.getFirstName(), employee.getLastName(), employee.getRole()));
             }
         }
 
@@ -308,8 +264,7 @@ public class AuthController {
 
     /**
      * This endpoint handles new account registration.
-     *
-     * @RequestBody means Spring will read the JSON body that Angular sends
+     * "@RequestBody" means Spring will read the JSON body that Angular sends
      * and automatically map it to our RegisterRequest record.
      * This is different from @RequestParam which reads URL parameters.
      */
@@ -376,4 +331,18 @@ public class AuthController {
         return ResponseEntity.status(201).body(response);
     }
 
+    private Map<String, Object> buildUserResponse(String message, long id, String email, String firstName, String lastName, String role) {
+        Map<String, Object> userDto = new HashMap<>();
+        userDto.put("id", id);
+        userDto.put("email", email);
+        userDto.put("firstName", firstName);
+        userDto.put("lastName", lastName);
+        userDto.put("role", role);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", message);
+        response.put("user", userDto);
+
+        return response;
+    }
 }

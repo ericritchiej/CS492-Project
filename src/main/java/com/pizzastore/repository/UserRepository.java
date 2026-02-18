@@ -1,11 +1,9 @@
 package com.pizzastore.repository;
 
-import com.pizzastore.model.Employee;
 import com.pizzastore.model.User;
 import com.pizzastore.model.Address;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
-import org.jooq.Select;
 import org.springframework.stereotype.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,16 +13,13 @@ import java.util.List;
 /**
  * A "Repository" is responsible for all communication with the database.
  * Think of it as the only class that is allowed to speak "database language."
- *
  * This separation is intentional and is called the "Repository Pattern":
  *   - Controllers (AuthController) handle HTTP requests and responses
  *   - Repositories (UserRepository) handle database reads and writes
  *   - Models (User, Address) represent the data itself
- *
  * If we ever switch databases (e.g. from PostgreSQL to MySQL), we only
  * need to change code in this file — nothing else needs to know.
- *
- * @Repository tells Spring this is a repository class. Spring will:
+ * "@Repository" tells Spring this is a repository class. Spring will:
  *   1. Automatically create an instance of it at startup
  *   2. Make it available for injection into controllers
  *   3. Translate database exceptions into Spring's standard exception types
@@ -37,7 +32,6 @@ public class UserRepository {
      * DSL stands for "Domain Specific Language" — jOOQ lets us write SQL-like
      * code in Java instead of raw SQL strings, which reduces typos and makes
      * queries easier to read and maintain.
-     *
      * Spring automatically creates and injects this for us based on the
      * database connection settings in application.properties.
      */
@@ -63,7 +57,6 @@ public class UserRepository {
     /**
      * Looks up a customer in the database by their email address.
      * We use email as the "username" for login purposes.
-     *
      * Returns a List<User> rather than a single User because the database
      * query could theoretically return multiple rows. In practice we expect
      * zero (user not found) or one (user found), but using a List lets us
@@ -72,6 +65,7 @@ public class UserRepository {
      * @param username  the email address to search for
      * @return          a list of matching users (usually empty or one item)
      */
+    @SuppressWarnings("resource")
     public List<User> findByUsername(String username) {
         logger.info("Finding users by username {}", username);
 
@@ -82,11 +76,12 @@ public class UserRepository {
         //   WHERE email = ?
         //
         return dsl.select(
-                        DSL.field("email", String.class),
-                        DSL.field("first_name", String.class).as("first_name"),
-                        DSL.field("last_name", String.class).as("last_name"),
-                        DSL.field("phone_number", String.class).as("phone_number"),
-                        DSL.field("password_hash", String.class).as("password_hash")
+                        DSL.field("customer_id"),
+                        DSL.field("email"),
+                        DSL.field("first_name").as("first_name"),
+                        DSL.field("last_name").as("last_name"),
+                        DSL.field("phone_number").as("phone_number"),
+                        DSL.field("password_hash").as("password_hash")
                 )
                 .from(DSL.table("customers"))
                 .where(DSL.field("email").eq(username))
@@ -95,18 +90,16 @@ public class UserRepository {
 
     /**
      * Creates a new customer and their address in the database.
-     *
      * This method performs TWO database inserts in sequence:
      *   1. Insert into "customers" table and get back the new customer's ID
      *   2. Insert into "addresses" table using that ID to link the records
-     *
      * The address must be inserted second because it needs the customer_id
      * from step 1 — this relationship between tables is called a "foreign key."
-     *
      * @param user      the User object containing customer details
      * @param address   the Address object containing address details
      * @return          the newly generated customer_id from the database
      */
+    @SuppressWarnings("resource")
     public Long createUser(User user, Address address) {
         logger.info("Creating new user with email {}", user.getEmail());
 
@@ -122,19 +115,20 @@ public class UserRepository {
         //
         // Note: user.getPassword() already contains the HASHED password at this point —
         // the hashing was done in AuthController before calling this method.
-        Long newCustomerId = dsl.insertInto(DSL.table("customers"))
+        var record = dsl.insertInto(DSL.table("customers"))
                 .set(DSL.field("email"), user.getEmail())
                 .set(DSL.field("first_name"), user.getFirstName())
                 .set(DSL.field("last_name"), user.getLastName())
                 .set(DSL.field("phone_number"), user.getPhoneNumber())
                 .set(DSL.field("password_hash"), user.getPassword())
                 .returning(DSL.field("customer_id"))
-                .fetchOne()
-                // PostgreSQL returns integer IDs as Integer (32-bit) not Long (64-bit).
-                // We fetch it as Integer first, then convert to Long with .longValue()
-                // so the rest of the app can use it consistently as a Long.
-                .get(DSL.field("customer_id", Integer.class))
-                .longValue();
+                .fetchOne();
+
+        if (record == null) {
+            throw new RuntimeException("Failed to insert customer — no ID returned.");
+        }
+
+        Long newCustomerId = record.get(DSL.field("customer_id", Integer.class)).longValue();
 
         logger.info("Created customer with ID {}", newCustomerId);
 

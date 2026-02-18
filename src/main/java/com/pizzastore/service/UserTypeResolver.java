@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 /**
  * Resolves the type of user attempting to log in based on their email domain.
- *
  * This class has a single responsibility: inspect an email address and return
  * a LoginType. It does not authenticate the user — that is AuthService's job.
  * Keeping this logic separate means routing rules can change independently

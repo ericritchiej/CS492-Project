@@ -22,7 +22,7 @@ import { NewAccount } from './newAccount/newAccount';
  * This is called "client-side routing" — the browser doesn't actually load a new
  * page from the server when you navigate. Instead, Angular intercepts the URL change
  * and swaps out the component displayed inside <RouterOutlet> in app.html.
- * This makes navigation feel instant compared to traditional multi-page websites.
+ * This makes navigation feel instant compared to traditional multipage websites.
  *
  * Each import at the top brings in a component class from its file so we can
  * reference it in the routes array below. The path after './' matches the

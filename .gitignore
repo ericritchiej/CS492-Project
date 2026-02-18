@@ -31,6 +31,9 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+### Environment ###
+.env
+
 ### Maven ###
 target/
 

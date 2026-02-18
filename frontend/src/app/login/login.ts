@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
@@ -26,7 +26,7 @@ interface IdentifyResponse {
 }
 
 /**
- * Describes the shape of the response from /api/auth/signin.
+ * Describes the shape of the response from /api/auth/signIn.
  * These field names must match what AuthController sends back.
  */
 type SignInResponse = {
@@ -55,7 +55,7 @@ export class Login implements OnInit {
   /**
    * Stores any error message to display when login fails.
    */
-  signinError: any;
+  signInError: any;
 
   constructor(
     private fb: FormBuilder,
@@ -89,8 +89,8 @@ export class Login implements OnInit {
    * Then routes to the worker login page (WORKER) or authenticates directly (CUSTOMER).
    * The user fills out one form and clicks one button — no intermediate step.
    */
-  onSignin() {
-    this.signinError = '';
+  onSignIn() {
+    this.signInError = '';
 
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
@@ -102,14 +102,13 @@ export class Login implements OnInit {
     // Step 1 — identify the user type from the email domain
     this.http.post<IdentifyResponse>('/api/auth/identify', { email: username }).subscribe({
       next: (res) => {
-        if (res.loginType === 'WORKER') {
-          this.signinEmployee(username, password);
-        } else {
-          this.signinCustomer(username, password);
-        }
+        const endpoint = res.loginType === 'WORKER'
+          ? '/api/auth/signIn/employee'
+          : '/api/auth/signIn/customer';
+        this.signIn(username, password, endpoint);
       },
       error: (err) => {
-        this.signinError =
+        this.signInError =
           err?.error?.error ??
           err?.error?.message ??
           'Could not verify email address.';
@@ -118,52 +117,14 @@ export class Login implements OnInit {
     });
   }
 
-  /**
-   * Authenticates a customer against /api/auth/signin.
-   * Only called after /identify has confirmed the user is a CUSTOMER.
-   */
-  private signinCustomer(username: string, password: string) {
-    const body = new HttpParams()
-      .set('username', username)
-      .set('password', password)
-      .toString();
-
-    this.http.post<SignInResponse>('/api/auth/signin/customer', body, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    }).subscribe({
+  private signIn(username: string, password: string, endpoint: string) {
+    this.http.post<SignInResponse>(endpoint, { username, password }).subscribe({
       next: (res) => {
         this.auth.setUser(res.user);
-        this.router.navigate(['/menu']);
+        void this.router.navigate(['/menu']);
       },
       error: (err) => {
-        this.signinError =
-          err?.error?.message ??
-          (typeof err?.error === 'string' ? err.error : null) ??
-          'Sign-in failed';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  /**
-   * Authenticates a customer against /api/auth/signin.
-   * Only called after /identify has confirmed the user is a CUSTOMER.
-   */
-  private signinEmployee(username: string, password: string) {
-    const body = new HttpParams()
-      .set('username', username)
-      .set('password', password)
-      .toString();
-
-    this.http.post<SignInResponse>('/api/auth/signin/employee', body, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    }).subscribe({
-      next: (res) => {
-        this.auth.setUser(res.user);
-        this.router.navigate(['/menu']);
-      },
-      error: (err) => {
-        this.signinError =
+        this.signInError =
           err?.error?.message ??
           (typeof err?.error === 'string' ? err.error : null) ??
           'Sign-in failed';

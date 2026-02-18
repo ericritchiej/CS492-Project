@@ -8,7 +8,7 @@
   The form is divided into sections using form-section divs to make
   it easier for the user to fill out step by step.
 -->
-<div class="login-page">
+<div class="newAccount-page">
   <h2>Create Account</h2>
   <p class="subtitle">Fill in your details below</p>
 
@@ -20,7 +20,7 @@
     submits the form. Using ngSubmit rather than a button click handler means
     the form also submits correctly when the user presses Enter.
   -->
-  <form class="login-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <form class="newAccount-form" [formGroup]="form" (ngSubmit)="onSubmit()">
 
     <!-- ===================== PERSONAL INFO SECTION ===================== -->
     <div class="form-section">
