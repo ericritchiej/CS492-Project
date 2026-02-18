@@ -42,6 +42,7 @@ class AuthControllerTest {
     // --- identify endpoint ---
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void identifyReturnsCustomerForCustomerEmail() {
         when(userTypeResolver.resolve("jane@gmail.com")).thenReturn(LoginType.CUSTOMER);
 
@@ -53,6 +54,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void identifyReturnsWorkerForWorkerEmail() {
         when(userTypeResolver.resolve("bob@work.com")).thenReturn(LoginType.WORKER);
 
@@ -75,6 +77,7 @@ class AuthControllerTest {
     // --- customer signin ---
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void customerSigninSucceedsWithValidCredentials() {
         when(userTypeResolver.resolve("jane@gmail.com")).thenReturn(LoginType.CUSTOMER);
         User user = new User();
@@ -142,6 +145,7 @@ class AuthControllerTest {
     // --- employee signin ---
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void employeeSigninSucceedsWithValidCredentials() {
         when(userTypeResolver.resolve("bob@work.com")).thenReturn(LoginType.WORKER);
         Employee employee = new Employee();
@@ -195,6 +199,7 @@ class AuthControllerTest {
     // --- registration ---
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     void registerSucceedsForNewCustomer() {
         when(userRepository.findByUsername("new@gmail.com")).thenReturn(Collections.emptyList());
         when(passwordEncoder.encode("Pizza123!")).thenReturn(HASHED_PASSWORD);
