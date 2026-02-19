@@ -1,40 +1,453 @@
-.restaurant-info-page h2 {
-  font-size: 1.75rem;
-  margin: 0 0 0.25rem;
+:root {
+  --cream: #ffffff;
+  --charcoal: #1a1a1a;
+  --terracotta: #c0392b;
+  --gold: #c0392b;
+  --sage: #922b21;
+  --warm-white: #f9f9f9;
+  --border: #e0e0e0;
 }
 
-.subtitle {
-  color: #666;
-  margin-bottom: 1.5rem;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--warm-white);
+  color: var(--charcoal);
 }
 
-.info-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  max-width: 500px;
+/* ── NAVBAR ───────────────────────────────── */
+.navbar {
+  background: #c0392b;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.info-card h3 {
-  margin: 0 0 1rem;
-  color: #d32f2f;
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1rem;
+  color: white;
+  text-decoration: none;
 }
 
-.info-card p {
-  margin: 0 0 0.5rem;
-  color: #333;
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  list-style: none;
 }
 
-.info-card h4 {
-  margin: 1rem 0 0.5rem;
+.navbar-links a {
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
 }
 
-.info-card ul {
-  margin: 0;
+.navbar-links a:hover { text-decoration: underline; }
+
+/* ── PAGE HEADER ──────────────────────────── */
+.page-header {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 2rem 0;
+}
+
+.page-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--charcoal);
+  margin-bottom: 0.25rem;
+}
+
+.page-header p {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+/* ── HERO ─────────────────────────────────── */
+.hero {
+  position: relative;
+  height: 520px;
+  background: linear-gradient(160deg, #7b241c 0%, #a93226 50%, #c0392b 100%);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 70% 40%, rgba(196,98,45,0.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(184,150,62,0.15) 0%, transparent 50%);
+}
+
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 3rem 4rem;
+  max-width: 1100px;
+  width: 100%;
+  animation: fadeUp 0.9s ease both;
+}
+
+.hero-eyebrow {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1.05;
+  margin-bottom: 1rem;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--terracotta);
+}
+
+.hero-meta {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.hero-meta span {
+  font-size: 0.85rem;
+  color: rgba(245,240,232,0.7);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hero-meta span::before {
+  content: '◆';
+  font-size: 0.5rem;
+  color: var(--gold);
+}
+
+/* ── PAGE LAYOUT ──────────────────────────── */
+.page-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ── SECTION SHARED ───────────────────────── */
+section {
+  padding: 4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+section:last-child { border-bottom: none; }
+
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 0.5rem;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 400;
+  color: var(--charcoal);
+  margin-bottom: 2.5rem;
+}
+
+/* ── ABOUT ────────────────────────────────── */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.about-text p {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #4a4a4a;
+  margin-bottom: 1rem;
+}
+
+.about-accent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.accent-stat {
+  border-left: 3px solid var(--terracotta);
   padding-left: 1.25rem;
 }
 
-.info-card li {
-  margin-bottom: 0.25rem;
-  color: #333;
+.accent-stat .number {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  color: var(--charcoal);
+  line-height: 1;
+}
+
+.accent-stat .label {
+  font-size: 0.8rem;
+  color: #888;
+  letter-spacing: 0.05em;
+  margin-top: 0.2rem;
+}
+
+/* ── SPECIALS ─────────────────────────────── */
+.specials-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2.5rem;
+}
+
+.specials-date {
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+}
+
+.specials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.special-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: fadeUp 0.6s ease both;
+}
+
+.special-card:nth-child(1) { animation-delay: 0.1s; }
+.special-card:nth-child(2) { animation-delay: 0.2s; }
+.special-card:nth-child(3) { animation-delay: 0.3s; }
+
+.special-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+}
+
+.card-image {
+  height: 180px;
+  background: linear-gradient(135deg, #d4956a 0%, #8b4513 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-image.pasta  { background: linear-gradient(135deg, #c0392b 0%, #7b241c 100%); }
+.card-image.fish   { background: linear-gradient(135deg, #922b21 0%, #6b1f17 100%); }
+.card-image.veggie { background: linear-gradient(135deg, #a93226 0%, #7b241c 100%); }
+
+.card-image-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  opacity: 0.3;
+}
+
+.card-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--gold);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  border-radius: 2px;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-course {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 0.4rem;
+}
+
+.card-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  margin-bottom: 0.6rem;
+  color: var(--charcoal);
+}
+
+.card-desc {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #777;
+  margin-bottom: 1.25rem;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.card-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: var(--terracotta);
+}
+
+.card-tag {
+  font-size: 0.7rem;
+  color: #aaa;
+  font-style: italic;
+}
+
+.stub-box {
+  background: #f8f5f0;
+  border: 1px dashed var(--border);
+  border-radius: 2px;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #bbb;
+}
+
+.stub-box .stub-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}
+
+.stub-box .stub-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #ccc;
+}
+
+.hours-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.hours-grid .stub-box {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── LOCATION MAP (STUB) ──────────────────── */
+.map-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.map-stub {
+  height: 320px;
+  background: #f0ece4;
+  border: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  border-radius: 2px;
+}
+
+.map-stub .stub-icon { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.35; }
+.map-stub .stub-label { font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; }
+
+.contact-details { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.contact-item .contact-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+  margin-bottom: 0.3rem;
+}
+
+.contact-item .contact-value {
+  font-size: 0.95rem;
+  color: var(--charcoal);
+  line-height: 1.5;
+}
+
+.reserve-btn {
+  display: inline-block;
+  margin-top: 0.5rem;
+  background: var(--charcoal);
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.85rem 2rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-decoration: none;
+}
+
+.reserve-btn:hover { background: var(--terracotta); }
+
+/* ── ANIMATIONS ───────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ───────────────────────────── */
+@media (max-width: 768px) {
+  .hero-content { padding: 2rem; }
+  .about-grid, .specials-grid, .map-layout, .hours-grid {
+    grid-template-columns: 1fr;
+  }
 }

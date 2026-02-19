@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import {PromotionListComponent} from '../promotions/promotion-list.component';
 
 interface RestaurantInfoData {
   name: string;
@@ -10,7 +11,9 @@ interface RestaurantInfoData {
 
 @Component({
   selector: 'app-restaurant-info',
-  imports: [],
+  imports: [
+    PromotionListComponent
+  ],
   templateUrl: './restaurant-info.html',
   styleUrl: './restaurant-info.css',
 })

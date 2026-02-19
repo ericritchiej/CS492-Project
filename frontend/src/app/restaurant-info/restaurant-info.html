@@ -1,18 +1,65 @@
-<div class="restaurant-info-page">
-  <h2>Restaurant Info</h2>
-  <p class="subtitle">Find us and visit</p>
+  <div class="page-wrapper">
+    <!-- ABOUT -->
+    <section>
+      <p class="section-label">Our Story</p>
+      <h2 class="section-title">A taste of Italy,<br>rooted in tradition</h2>
+      <div class="about-text">
+        <p>Pizza Store has been serving handcrafted Italian cuisine to Springfield since 1987. Every dish begins with ingredients sourced from local farms and imported Italian producers we've trusted for decades.</p>
+        <p>Our kitchen is led by Chef Marco Rossi, whose family recipes from the Emilia-Romagna region form the heart of our menu. From hand-rolled pasta to slow-braised ragù, every plate tells a story.</p>
+      </div>
+    </section>
 
-  @if (info()) {
-    <div class="info-card">
-      <h3>{{ info()!.name }}</h3>
-      <p><strong>Address:</strong> {{ info()!.address }}</p>
-      <p><strong>Phone:</strong> {{ info()!.phone }}</p>
-      <h4>Hours</h4>
-      <ul>
-        @for (hour of info()!.hours; track hour) {
-          <li>{{ hour }}</li>
-        }
-      </ul>
-    </div>
-  }
-</div>
+    <!-- PROMOTIONS -->
+    <section>
+      <div class="specials-header">
+        <div>
+          <p class="section-label">Current Offers</p>
+          <h2 class="section-title">Promotions &amp; Coupons</h2>
+        </div>
+      </div>
+
+      <div class="coupon-grid">
+
+        <app-promotion-list />
+
+      </div>
+    </section>
+
+    <!-- HOURS TABLE (STUB) -->
+    <section>
+      <p class="section-label">When to Visit</p>
+      <h2 class="section-title">Hours</h2>
+      <div class="stub-box">
+        <div class="stub-icon">🕐</div>
+        <div class="stub-label">Hours table coming soon</div>
+      </div>
+    </section>
+
+    <!-- LOCATION MAP (STUB) -->
+    <section>
+      <p class="section-label">Find Us</p>
+      <h2 class="section-title">Location &amp; Contact</h2>
+      <div class="map-layout">
+        <div class="map-stub">
+          <div class="stub-icon">🗺️</div>
+          <div class="stub-label">Map embed coming soon</div>
+        </div>
+        <div class="contact-details">
+          <div class="contact-item">
+            <p class="contact-label">Address</p>
+            <p class="contact-value">742 Evergreen Terrace<br>Springfield, IL 62701</p>
+          </div>
+          <div class="contact-item">
+            <p class="contact-label">Phone</p>
+            <p class="contact-value">(555) 867-5309</p>
+          </div>
+          <div class="contact-item">
+            <p class="contact-label">Email</p>
+            <p class="contact-value">info&#64;bellanotte.com</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+

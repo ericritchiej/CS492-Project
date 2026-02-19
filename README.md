@@ -263,6 +263,22 @@ Login uses a two-step process:
 
 New customers can register via the **New Account** page, which collects personal info, address, and credentials. After registration, the user is automatically logged in. The logged-in user's name is displayed in the nav bar across all pages via the shared `AuthService`.
 
+# To build the executable:
+1.	Step 1: Build Angular first
+      a.	In your frontend folder, run:
+      b.	npx ng build --configuration production
+      c.	After it succeeds, Angular outputs files to a dist/ folder inside your frontend directory. The path will look something like:
+      i.	frontend/dist/frontend/browser/
+2.	Step 2: Copy those files into Spring Boot
+      a.	Copy everything inside that browser/ folder (or whatever the output folder is named) into:
+      b.	src/main/resources/static/
+3.	Step 3: Spring Boot serves them automatically
+      a.	Spring Boot automatically serves anything in src/main/resources/static/ as a web resource — no extra configuration needed. When someone visits http://localhost:8080/ it will serve index.html.
+4.	 Run ./mvnw package to produce a fat JAR in the target/ folder
+1.	The grader should be able to run it with just: java -jar target/pizza-store-0.0.1-SNAPSHOT.jar
+2.	Note: this all works from intellij
+
+
 ## Troubleshooting
 
 - **`mvnw.cmd` shows "Downloading Maven Wrapper..."** — This is normal on first run. It downloads the Maven wrapper jar automatically.
