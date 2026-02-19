@@ -1,0 +1,38 @@
+<div class="login-page">
+  <h2>Manager Login</h2>
+  <p class="subtitle">Sign in to manager tools</p>
+
+  @if (loginError) {
+    <div class="error">{{ loginError }}</div>
+  }
+
+  <form class="login-form" [formGroup]="form" (ngSubmit)="onLogin()">
+
+    <label>
+      Email Address
+      <input type="text" formControlName="username" placeholder="manager@example.com">
+
+      @if (form.get('username')?.invalid && (form.get('username')?.dirty || form.get('username')?.touched)) {
+        <div class="field-error">
+          @if (form.get('username')?.errors?.['required']) { <span>Email is required.</span> }
+          @if (form.get('username')?.errors?.['minlength']) { <span>Must be at least 3 characters.</span> }
+        </div>
+      }
+    </label>
+
+    <label>
+      Password
+      <input type="password" formControlName="password" placeholder="Enter your password">
+
+      @if (form.get('password')?.invalid && (form.get('password')?.dirty || form.get('password')?.touched)) {
+        <div class="field-error">
+          @if (form.get('password')?.errors?.['required']) { <span>Password is required.</span> }
+        </div>
+      }
+    </label>
+
+    <button type="submit">Login</button>
+
+    <button type="button" routerLink="/menu">Cancel</button>
+  </form>
+</div>
