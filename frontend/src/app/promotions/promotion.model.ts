@@ -1,10 +1,10 @@
-export interface promotion {
-  promotion_id: number;
+export interface Promotion {
+  promotionId: number;
   code: string;
-  discount_value: number;
-  promotion_desc: string;
-  promotion_summary: string;
-  exp_dt: string;
-  min_order_amt: number;
+  discountValue: number;
+  promotionDesc: string;
+  promotionSummary: string;
+  expDt: string;
+  minOrderAmt: number;
 }
 

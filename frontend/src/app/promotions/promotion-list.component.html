@@ -11,17 +11,19 @@
 }
 
 <div class="promotion-grid">
-  @for (promotion of promotions; track promotion.promotion_id) {
+  @for (promotion of promotions; track promotion.promotionId) {
     <div class="promotion-card">
       <div class="promotion-left">
-        <div class="promotion-discount">Save {{ promotion.discount_value | currency }}</div>
-        <div class="promotion-limit">Min Order {{ promotion.min_order_amt | currency  }}</div>
+        <div class="promotion-discount">Save {{ promotion.discountValue | currency }}</div>
+        <div class="promotion-limit">Min Order {{ promotion.minOrderAmt | currency  }}</div>
       </div>
       <div class="promotion-divider"></div>
       <div class="promotion-right">
-        <h3 class="promotion-title">{{ promotion.promotion_summary }}</h3>
-        <p class="promotion-desc">{{ promotion.promotion_desc }}</p>
-        <div class="promotion-expiry"> Expires: {{ promotion.exp_dt | date:'MM/dd/yyyy' }}</div>
+        <h3 class="promotion-title">{{ promotion.promotionSummary }}</h3>
+        <p class="promotion-desc">{{ promotion.promotionDesc }}</p>
+        <div class="promotion-expiry">
+          {{ promotion.expDt ? 'Expires: ' + (promotion.expDt | date:'MM/dd/yyyy') : 'No expiration' }}
+        </div>
         <div class="promotion-code">Code: <strong>{{ promotion.code }}</strong></div>
       </div>
     </div>

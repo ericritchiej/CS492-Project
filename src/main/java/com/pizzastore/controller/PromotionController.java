@@ -26,7 +26,7 @@ public class PromotionController {
     @GetMapping
     public ResponseEntity<List<Promotion>> getPromotions() {
         logger.info("Fetching all promotions");
-        List<Promotion> promotions = promotionRepository.findByAllPromotions();
+        List<Promotion> promotions = promotionRepository.findAllPromotions();
         logger.info("found promotions: {}",promotions.size());
         return ResponseEntity.ok(promotions);
     }

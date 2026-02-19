@@ -1,7 +1,6 @@
 package com.pizzastore.repository;
 
 import com.pizzastore.model.Promotion;
-import com.pizzastore.model.User;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -27,8 +26,8 @@ public class PromotionRepository {
     }
 
     @SuppressWarnings("resource")
-    public List<Promotion> findByAllPromotions() {
-        logger.info("Finding users all promotions");
+    public List<Promotion> findAllPromotions() {
+        logger.info("Finding all active promotions");
 
         // Build the SELECT query using jOOQ.
         // This is equivalent to the following SQL:
@@ -42,7 +41,7 @@ public class PromotionRepository {
                         DSL.field("discount_value"),
                         DSL.field("promotion_desc"),
                         DSL.field("promotion_summary"),
-                        DSL.field("exp_dt"),
+                        DSL.field("exp_dt", LocalDate.class),
                         DSL.field("min_order_amt")
                 )
                 .from(DSL.table("promotions"))

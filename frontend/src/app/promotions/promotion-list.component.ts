@@ -1,7 +1,7 @@
 import {Component, inject, OnInit, ChangeDetectorRef} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import { promotionService } from './promotion.service';
-import { promotion } from './promotion.model';
+import { PromotionService } from './promotion.service';
+import { Promotion } from './promotion.model';
 
 @Component({
   selector: 'app-promotion-list',
@@ -10,17 +10,16 @@ import { promotion } from './promotion.model';
   styleUrl: './promotion-list.component.css'
 })
 export class PromotionListComponent implements OnInit {
-  private promotionService = inject(promotionService);
+  private promotionService = inject(PromotionService);
   private cdr = inject(ChangeDetectorRef);
 
-  promotions: promotion[] = [];
+  promotions: Promotion[] = [];
   isLoading = true;
   errorMessage = '';
 
   ngOnInit() {
-    this.promotionService.getpromotions().subscribe({
+    this.promotionService.getPromotions().subscribe({
       next: (data) => {
-        console.log(data);
         this.promotions = data;
         this.isLoading = false;
         this.cdr.detectChanges();  // tell Angular to re-render

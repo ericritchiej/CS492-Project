@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.sql.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "promotions")
@@ -16,25 +16,25 @@ public class Promotion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "promotion_id")
-    private Long promotion_id;
+    private Long promotionId;
 
     @Column(name = "code")
     private String code;
 
     @Column(name = "discount_value")
-    private Double  discount_value;
+    private Double discountValue;
 
     @Column(name = "promotion_desc")
-    private String promotion_desc;
+    private String promotionDesc;
 
     @Column(name = "promotion_summary")
-    private String promotion_summary;
+    private String promotionSummary;
 
     @Column(name = "exp_dt")
-    private Date exp_dt;
+    private LocalDate expDt;
 
     @Column(name = "min_order_amt")
-    private Double  min_order_amt;
+    private Double minOrderAmt;
 
     // getters and setters come from Lombok
 }
