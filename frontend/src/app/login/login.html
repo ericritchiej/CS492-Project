@@ -1,37 +1,59 @@
+<!--
+  Login page template.
+
+  A single form where the user enters their email and password together
+  and clicks one "Sign In" button. The backend determines whether they
+  are a CUSTOMER or WORKER — customers are authenticated immediately,
+  workers are redirected to the worker login page.
+-->
 <div class="login-page">
   <h2>Login</h2>
   <p class="subtitle">Sign in to your account</p>
 
-  @if (authStatus()) {
-    <p class="status-message">{{ authStatus()!.message }}</p>
+  @if (signInError) {
+    <div class="error">
+      {{ signInError }}
+    </div>
   }
-  <div *ngIf="signinError" class="error">
-    {{ signinError }}
-  </div>
 
-  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSignin()">
+  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSignIn()">
+
     <label>
-      Username
-      <input type="text" formControlName="username" placeholder="Enter your username">
+      Email Address
+      <input
+        type="email"
+        formControlName="username"
+        placeholder="Enter your email address">
 
       @if (loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)) {
         <div class="field-error">
-          @if (loginForm.get('username')?.errors?.['required']) { <span>Username is required.</span> }
-          @if (loginForm.get('username')?.errors?.['minlength']) { <span>Must be at least 3 characters.</span> }
+          @if (loginForm.get('username')?.errors?.['required']) {
+            <span>Email is required.</span>
+          }
+          @if (loginForm.get('username')?.errors?.['email']) {
+            <span>Please enter a valid email address.</span>
+          }
         </div>
       }
     </label>
+
     <label>
       Password
       <input type="password" formControlName="password" placeholder="Enter your password">
 
       @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
         <div class="field-error">
-          @if (loginForm.get('password')?.errors?.['required']) { <span>Password is required.</span> }
+          @if (loginForm.get('password')?.errors?.['required']) {
+            <span>Password is required.</span>
+          }
         </div>
       }
     </label>
-    <button type="submit" [disabled]="loginForm.invalid">Sign In</button>
+
+    <button type="submit">Sign In</button>
+
   </form>
+
   <a routerLink="/new-account" class="confirmation-link">Create an Account</a>
+
 </div>
