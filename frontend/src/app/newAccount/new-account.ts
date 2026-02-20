@@ -84,8 +84,8 @@ function passwordMatchValidator(): ValidatorFn {
   selector: 'app-new-account',
   standalone: true,
   imports: [RouterLink, ReactiveFormsModule, CommonModule],
-  templateUrl: './newAccount.html',
-  styleUrl: './newAccount.css',
+  templateUrl: './new-account.html',
+  styleUrl: './new-account.css',
 })
 export class NewAccount implements OnInit {
 

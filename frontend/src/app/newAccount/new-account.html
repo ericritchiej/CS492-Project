@@ -14,9 +14,9 @@
 
   <!--
     [formGroup]="form" connects this HTML form to the FormGroup defined
-    in newAccount.ts. Angular tracks every field's value and validity automatically.
+    in new-account.ts. Angular tracks every field's value and validity automatically.
 
-    (ngSubmit)="onSubmit()" calls onSubmit() in newAccount.ts when the user
+    (ngSubmit)="onSubmit()" calls onSubmit() in new-account.ts when the user
     submits the form. Using ngSubmit rather than a button click handler means
     the form also submits correctly when the user presses Enter.
   -->
@@ -28,7 +28,7 @@
 
       <!--
         field-row puts First Name and Last Name side by side on one line.
-        This is controlled by CSS flexbox in newAccount.css — the .field-row
+        This is controlled by CSS flexbox in new-account.css — the .field-row
         class sets display: flex, and each label inside takes equal space.
       -->
       <div class="field-row">
@@ -72,7 +72,7 @@
         @if (form.get('phone')?.errors?.['pattern']) {
           <!--
             'pattern' error means the value didn't match the regex defined
-            in newAccount.ts: /^\+?[\d\s\-\(\)]{7,15}$/
+            in new-account.ts: /^\+?[\d\s\-\(\)]{7,15}$/
             This allows formats like (555) 555-5555 or +1-555-555-5555
           -->
           <span class="field-error">Please enter a valid phone number.</span>
@@ -93,7 +93,7 @@
         <!--
           "(optional)" in the label lets the user know they don't have to
           fill this in. The address2 field has no Validators.required in
-          newAccount.ts, so the form will be valid even if left blank.
+          new-account.ts, so the form will be valid even if left blank.
         -->
         Apartment, suite, etc. (optional)
         <input type="text" formControlName="address2" placeholder="Apt 4B">
@@ -141,7 +141,7 @@
           type="email" tells the browser this is an email field.
           On mobile it shows an optimized keyboard with @ and .com keys.
           The browser may also do basic email format validation, though
-          Angular's Validators.email in newAccount.ts handles this more reliably.
+          Angular's Validators.email in new-account.ts handles this more reliably.
         -->
         <input type="email" formControlName="email" placeholder="jane@example.com">
       </label>
@@ -166,7 +166,7 @@
 
         Note that we check form.errors (the whole form's errors) rather than
         a single field's errors. This is because passwordMatchValidator() in
-        newAccount.ts is attached to the FORM GROUP, not an individual field,
+        new-account.ts is attached to the FORM GROUP, not an individual field,
         since it needs to read two fields at once to compare them.
 
         We also check that confirmPassword has been touched so this error
@@ -180,7 +180,7 @@
     <!-- ===================== FEEDBACK MESSAGES ===================== -->
 
     <!--
-      errorMessage() and successMessage() are signals defined in newAccount.ts.
+      errorMessage() and successMessage() are signals defined in new-account.ts.
       The () is required to read a signal's value — without it you'd get
       the signal object itself, not the text inside it.
 

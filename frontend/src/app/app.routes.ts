@@ -8,7 +8,7 @@ import { Profile } from './profile/profile';
 import { Cart } from './cart/cart';
 import { Checkout } from './checkout/checkout';
 import { Reporting } from './reporting/reporting';
-import { NewAccount } from './newAccount/newAccount';
+import { NewAccount } from './newAccount/new-account';
 
 /**
  * This file defines the "routes" for the application — the rules that determine
