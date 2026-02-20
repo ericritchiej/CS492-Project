@@ -1,0 +1,31 @@
+@if (isLoading) {
+  <p class="promotion-loading">Loading promotions...</p>
+}
+
+@if (errorMessage) {
+  <p class="promotion-error">{{ errorMessage }}</p>
+}
+
+@if (!isLoading && promotions.length === 0) {
+  <p class="promotion-empty">No promotions available at this time.</p>
+}
+
+<div class="promotion-grid">
+  @for (promotion of promotions; track promotion.promotionId) {
+    <div class="promotion-card">
+      <div class="promotion-left">
+        <div class="promotion-discount">Save {{ promotion.discountValue | currency }}</div>
+        <div class="promotion-limit">Min Order {{ promotion.minOrderAmt | currency  }}</div>
+      </div>
+      <div class="promotion-divider"></div>
+      <div class="promotion-right">
+        <h3 class="promotion-title">{{ promotion.promotionSummary }}</h3>
+        <p class="promotion-desc">{{ promotion.promotionDesc }}</p>
+        <div class="promotion-expiry">
+          {{ promotion.expDt ? 'Expires: ' + (promotion.expDt | date:'MM/dd/yyyy') : 'No expiration' }}
+        </div>
+        <div class="promotion-code">Code: <strong>{{ promotion.code }}</strong></div>
+      </div>
+    </div>
+  }
+</div>

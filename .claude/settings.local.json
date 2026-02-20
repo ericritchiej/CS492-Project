@@ -31,7 +31,10 @@
       "WebFetch(domain:github.com)",
       "Bash(ls:*)",
       "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" ls-files:*)",
-      "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" diff main...feature/employee-login --name-only)"
+      "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" diff main...feature/employee-login --name-only)",
+      "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" diff main...HEAD)",
+      "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" log main..HEAD --oneline)",
+      "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" show --stat HEAD)"
     ]
   }
 }

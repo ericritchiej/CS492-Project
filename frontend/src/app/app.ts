@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import {Component, OnInit, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+
 
 /**
  * @Component is a decorator that tells Angular "this class is a component."
@@ -51,15 +53,9 @@ import { ReactiveFormsModule } from '@angular/forms';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-
-  /**
-   * The title of the application. This can be referenced in app.html
-   * using {{ title }} to display it dynamically. Storing it here rather
-   * than hardcoding it in the HTML means you only need to change it in
-   * one place if the app name ever changes.
-   */
-  title = 'Pizza Store';
+export class App implements OnInit {
+  title = signal<string>('');
+  error = signal<string | null>(null);
 
   /**
    * The constructor runs once when this component is first created.
@@ -79,5 +75,19 @@ export class App {
    *   "public" makes it available to the template, which is why we can write
    *   things like {{ auth.user$ | async }} directly in app.html.
    */
-  constructor(public auth: AuthService) {}
+  constructor(public auth: AuthService, private http: HttpClient) {}
+
+
+  ngOnInit() {
+    this.http.get<{ name: string }>('/api/restaurant-info').subscribe({
+      next: data => {
+        this.title.set(data.name);
+      },
+      error: err => {
+        this.title.set('Pizza Store');  // fallback name
+        this.error.set('Could not load restaurant info.');
+        console.error('Failed to fetch restaurant info:', err);
+      }
+    });
+  }
 }

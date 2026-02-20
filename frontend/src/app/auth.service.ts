@@ -7,7 +7,7 @@ import { BehaviorSubject } from 'rxjs';
  * This acts as a contract: anywhere in the app that uses a CurrentUser
  * is guaranteed to have these exact fields available.
  *
- * We export it so other files (like login.ts and newAccount.ts) can
+ * We export it so other files (like login.ts and new-account.ts) can
  * import and use this same type definition rather than defining their own.
  */
 export type CurrentUser = {
