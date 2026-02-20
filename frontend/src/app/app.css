@@ -19,7 +19,14 @@ header h1 {
 
 nav {
   display: flex;
+  align-items: center;   /* 👈 ADD THIS */
   gap: 1.5rem;
+}
+
+nav a,
+.nav-dropdown-toggle {
+  display: flex;
+  align-items: center;
 }
 
 nav a {

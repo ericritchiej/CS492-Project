@@ -9,12 +9,15 @@ import { Cart } from './cart/cart';
 import { Checkout } from './checkout/checkout';
 import { Reporting } from './reporting/reporting';
 import { NewAccount } from './newAccount/newAccount';
+import { ManagerLogin } from './manager-login/manager-login';
+
 
 export const routes: Routes = [
   { path: 'menu', component: Menu },
   { path: 'orders', component: Orders },
   { path: 'admin', component: Admin },
   { path: 'login', component: Login },
+  { path: 'manager-login', component: ManagerLogin },
   { path: 'restaurant-info', component: RestaurantInfo },
   { path: 'profile', component: Profile },
   { path: 'cart', component: Cart },
