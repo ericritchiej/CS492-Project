@@ -1,66 +1,18 @@
-  <div class="page-wrapper">
-    <!-- ABOUT -->
-    <div class="about-layout">
-      <section>
-        <p class="section-label">Our Story</p>
-        <div class="about-text">
-          <p>{{ info()?.description }}</p>
-        </div>
-      </section>
-      @if (error()) {
-        <p class="error-banner">{{ error() }}</p>
-      }
+<div class="restaurant-info-page">
+  <h2>Restaurant Info</h2>
+  <p class="subtitle">Find us and visit</p>
 
-      <!-- LOCATION -->
-      <section>
-        <p class="section-label">Find Us</p>
-        <h2 class="section-title">Location &amp; Contact</h2>
-        <div class="map-layout">
-          <div class="contact-details">
-            <div class="contact-item">
-              <p class="contact-label">Address</p>
-              <p class="contact-value">
-                {{ info()?.streetAddr1 }}<br>
-                @if (info()?.streetAddr2) {
-                  {{ info()?.streetAddr2 }}<br>
-                }
-                {{ info()?.city }}, {{ info()?.state }} {{ info()?.zipCode }}
-              </p>
-            </div>
-            <div class="contact-item">
-              <p class="contact-label">Phone</p>
-              <p class="contact-value">{{ formatPhone(info()?.phoneNumber) }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- HOURS TABLE (STUB) -->
-    <section>
-      <p class="section-label">When to Visit</p>
-      <h2 class="section-title">Hours</h2>
-      <div class="hours">
-        @for (hour of hours(); track hour.id) {
-          <p>{{ hour.displayText }}</p>
+  @if (info()) {
+    <div class="info-card">
+      <h3>{{ info()!.name }}</h3>
+      <p><strong>Location:</strong> {{ info()!.address }}</p>
+      <p><strong>Phone:</strong> {{ info()!.phone }}</p>
+      <h4>Hours of Operation</h4>
+      <ul>
+        @for (hour of info()!.hours; track hour) {
+          <li>{{ hour }}</li>
         }
-      </div>
-    </section>
-
-    <!-- PROMOTIONS -->
-    <section>
-      <div class="specials-header">
-        <div>
-          <p class="section-label">Current Offers</p>
-          <h2 class="section-title">Promotions &amp; Coupons</h2>
-        </div>
-      </div>
-
-      <div class="coupon-grid">
-
-        <app-promotion-list />
-
-      </div>
-    </section>
-  </div>
-
+      </ul>
+    </div>
+  }
+</div>
