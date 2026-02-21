@@ -6,10 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-
-
 /**
  * A "Controller" is the entry point for HTTP requests coming from the frontend (Angular).
  * Think of it like a receptionist — it receives requests, figures out what to do,
