@@ -9,6 +9,7 @@ import { Cart } from './cart/cart';
 import { Checkout } from './checkout/checkout';
 import { Reporting } from './reporting/reporting';
 import { NewAccount } from './newAccount/new-account';
+import { Promotions } from './promotions/promotions';
 
 /**
  * This file defines the "routes" for the application — the rules that determine
@@ -50,8 +51,11 @@ export const routes: Routes = [
   { path: 'orders', component: Orders },
 
   // Admin dashboard — in a production app this route should be
-  // protected so only admin users can access it (using a Route Guard)
+  // protected so only admin users can access it
   { path: 'admin', component: Admin },
+
+  // page to update promotions
+  { path: 'promotions', component: Promotions },
 
   // The sign-in page where existing customers enter their credentials
   { path: 'login', component: Login },

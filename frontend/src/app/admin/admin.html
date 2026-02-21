@@ -1,13 +1,20 @@
-<!-- PAGE HEADER -->
-<div class="page-header">
-  <div class="page-header-inner">
-    <h1>Menu &amp; Store Management</h1>
-    <p>Manage crusts, sizes, categories, products, and toppings</p>
-  </div>
-</div>
-
 <!-- MAIN -->
 <div class="container">
+  <div class="section-card open">
+    <div class="section-header">
+      <div class="section-title">
+        <div class="page-header-inner">
+          <h1>Menu &amp; Store Management</h1>
+          <p>Manage crusts, sizes, categories, products, and toppings</p>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <a routerLink="/reporting" class="btn btn-primary">View Reports</a>
+          <a routerLink="/promotions" class="btn btn-primary">Update Promotions</a>
+        </div>
+      </div>
+    </div>
 
   <!-- ── 1. CRUST TYPES ── -->
   <div class="section-card" [class.open]="openSections['crust']">

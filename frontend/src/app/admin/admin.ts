@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 // ── INTERFACES ──
 interface CrustType {
@@ -39,7 +40,7 @@ export type SectionKey = 'crust' | 'sizes' | 'categories' | 'products' | 'toppin
 @Component({
   selector: 'app-admin-management',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
