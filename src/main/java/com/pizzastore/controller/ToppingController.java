@@ -31,20 +31,20 @@ public class ToppingController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addTopping(@RequestBody Map<String, Object> topping) {
-        logger.info("Adding topping");
+    public ResponseEntity<Map<String, Object>> addItem(@RequestBody Map<String, Object> topping) {
+        logger.info("Adding topping {}", topping.toString());
         // TODO: save to database
         return ResponseEntity.ok(topping);
     }
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Map<String, Object>> deleteTopping(@PathVariable int id) {
-        logger.info("Deleting topping");
+    public ResponseEntity<Map<String, Object>> deleteItem(@PathVariable int id) {
+        logger.info("Deleting topping {}", id);
         // TODO: delete from database
         return ResponseEntity.ok().build();
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<Map<String, Object>> update(@RequestBody Map<String, Object> topping) {
-        logger.info("Updating topping");
+    public ResponseEntity<Map<String, Object>> updateItem(@PathVariable int id, @RequestBody Map<String, Object> topping) {
+        logger.info("Updating topping id={}, body={}", id, topping);
 
         // TODO: update database
         return ResponseEntity.ok(topping);

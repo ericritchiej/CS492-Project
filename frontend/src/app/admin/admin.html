@@ -48,7 +48,7 @@
               <td class="price-cell">{{ formatPrice(crust.price) }}</td>
               <td class="actions">
                 <div class="actions-inner">
-                  <button class="btn btn-icon btn-edit" title="Edit" (click)="openEdit('crust', crust.id)">✏️</button>
+                  <button class="btn btn-icon btn-edit" title="Edit" (click)="updateCrust(crust)">✏️</button>
                   <button class="btn btn-icon btn-danger" title="Delete" (click)="deleteCrust(crust.id)">🗑️</button>
                 </div>
               </td>
@@ -85,7 +85,7 @@
             <label>Price ($)</label>
             <input type="number" [(ngModel)]="newSize.price" placeholder="0.00" step="0.01" min="0">
           </div>
-          <button class="btn btn-primary" (click)="addSize()">+ Add</button>
+          <button class="btn btn-primary" (click)="addPizzaSize()">+ Add</button>
         </div>
       </div>
       <table class="data-table">
@@ -100,8 +100,8 @@
               <td class="price-cell">{{ formatPrice(size.price) }}</td>
               <td class="actions">
                 <div class="actions-inner">
-                  <button class="btn btn-icon btn-edit" (click)="openEdit('sizes', size.id)">✏️</button>
-                  <button class="btn btn-icon btn-danger" (click)="deleteItem('sizes', size.id)">🗑️</button>
+                  <button class="btn btn-icon btn-edit" (click)="updatePizzaSize(size)">✏️</button>
+                  <button class="btn btn-icon btn-danger" (click)="deletePizzaSize(size.id)">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -133,7 +133,7 @@
             <label>Category Name</label>
             <input type="text" [(ngModel)]="newCategory.name" placeholder="e.g. Specialty Pizzas">
           </div>
-          <button class="btn btn-primary" (click)="addCategory()">+ Add</button>
+          <button class="btn btn-primary" (click)="addProductCategory()">+ Add</button>
         </div>
       </div>
       <table class="data-table">
@@ -147,8 +147,8 @@
               <td><span class="pill pill-red">{{ category.name }}</span></td>
               <td class="actions">
                 <div class="actions-inner">
-                  <button class="btn btn-icon btn-edit" (click)="openEdit('categories', category.id)">✏️</button>
-                  <button class="btn btn-icon btn-danger" (click)="deleteItem('categories', category.id)">🗑️</button>
+                  <button class="btn btn-icon btn-edit" (click)="updateProductCategory(category)">✏️</button>
+                  <button class="btn btn-icon btn-danger" (click)="deleteProductCategory(category.id)">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -193,11 +193,6 @@
             <label>Base Price ($)</label>
             <input type="number" [(ngModel)]="newProduct.price" placeholder="0.00" step="0.01" min="0">
           </div>
-          <div class="form-group" style="max-width:160px">
-            <label>Image</label>
-            <label class="file-label" for="new-prod-img">{{ productImgLabel }}</label>
-            <input type="file" id="new-prod-img" accept="image/*" (change)="onProductImageSelected($event)">
-          </div>
           <button class="btn btn-primary" (click)="addProduct()">+ Add</button>
         </div>
       </div>
@@ -208,22 +203,13 @@
         <tbody>
           @for (product of products; track product.id) {
             <tr>
-              <td>
-                <div class="thumb">
-                  @if (product.img) {
-                    <img [ngSrc]="product.img" width="36" height="36" style="border-radius:6px;object-fit:cover" alt="product image">
-                  } @else {
-                    <span>🍕</span>
-                  }
-                </div>
-              </td>
               <td><strong>{{ product.name }}</strong></td>
               <td><span class="pill">{{ getCategoryName(product.catId) }}</span></td>
               <td class="price-cell">{{ formatPrice(product.price) }}</td>
               <td class="actions">
                 <div class="actions-inner">
-                  <button class="btn btn-icon btn-edit" (click)="openEdit('products', product.id)">✏️</button>
-                  <button class="btn btn-icon btn-danger" (click)="deleteItem('products', product.id)">🗑️</button>
+                  <button class="btn btn-icon btn-edit" (click)="updateProduct(product)">✏️</button>
+                  <button class="btn btn-icon btn-danger" (click)="deleteProduct(product.id)">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -274,8 +260,8 @@
               <td class="price-cell">{{ formatPrice(topping.cost) }}</td>
               <td class="actions">
                 <div class="actions-inner">
-                  <button class="btn btn-icon btn-edit" (click)="openEdit('toppings', topping.id)">✏️</button>
-                  <button class="btn btn-icon btn-danger" (click)="deleteItem('toppings', topping.id)">🗑️</button>
+                  <button class="btn btn-icon btn-edit" (click)="updateTopping(topping)">✏️</button>
+                  <button class="btn btn-icon btn-danger" (click)="deleteTopping(topping.id)">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -293,7 +279,7 @@
 <div class="modal-overlay" [class.open]="editModalOpen" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ editModalTitle }}</h3>
+      <h3>Edit Item</h3>
       <button class="modal-close" (click)="closeModal()">✕</button>
     </div>
     <div class="modal-body">

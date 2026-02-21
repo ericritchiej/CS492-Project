@@ -32,19 +32,19 @@ public class ProductCategoryController {
 
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addProductCategory(@RequestBody Map<String, Object> productCategory) {
-        logger.info("Adding product category");
+        logger.info("Adding product category {}", productCategory.toString());
         // TODO: save to database
         return ResponseEntity.ok(productCategory);
     }
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Map<String, Object>> deleteProductCategory(@PathVariable int id) {
-        logger.info("Deleting product category");
+        logger.info("Deleting product category {}", id);
         // TODO: delete from database
         return ResponseEntity.ok().build();
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<Map<String, Object>> update(@RequestBody Map<String, Object> productCategory) {
-        logger.info("Updating product category");
+    public ResponseEntity<Map<String, Object>> updateProductCategory(@PathVariable int id, @RequestBody Map<String, Object> productCategory) {
+        logger.info("Updating product category id={}, body={}", id, productCategory);
 
         // TODO: update database
         return ResponseEntity.ok(productCategory);

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgOptimizedImage } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef } from '@angular/core';
 
@@ -27,7 +26,6 @@ export interface Product {
   name: string;
   catId: number;
   price: number;
-  img: string | null;
 }
 
 export interface Topping {
@@ -38,15 +36,10 @@ export interface Topping {
 
 export type SectionKey = 'crust' | 'sizes' | 'categories' | 'products' | 'toppings';
 
-export interface EditContext {
-  key: SectionKey;
-  id: number;
-}
-
 @Component({
   selector: 'app-admin-management',
   standalone: true,
-  imports: [FormsModule, NgOptimizedImage],
+  imports: [FormsModule],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
@@ -68,24 +61,20 @@ export class Admin implements OnInit {
   products: Product[] = [];
   toppings: Topping[] = [];
 
-  // ── ID COUNTERS ──
-  private nextId: Record<SectionKey, number> = {
-    crust: 10, sizes: 10, categories: 10, products: 10, toppings: 10
-  };
-
   // ── ADD FORM MODELS ──
   newCrust:    Partial<CrustType>       = { name: '', price: undefined };
   newSize:     Partial<PizzaSize>       = { name: '', price: undefined };
   newCategory: Partial<ProductCategory> = { name: '' };
-  newProduct:  Partial<Product>         = { name: '', catId: undefined, price: undefined, img: null };
+  newProduct:  Partial<Product>         = { name: '', catId: undefined, price: undefined };
   newTopping:  Partial<Topping>         = { name: '', cost: undefined };
 
   // ── EDIT MODAL ──
   editModalOpen = false;
-  editContext: EditContext | null = null;
   editName  = '';
   editPrice = 0;
   editCatId = 0;
+  saveEditCallback: (() => void) | null = null;
+  editingSection: SectionKey | null = null;  // ← add here
 
   // ── TOAST ──
   toastMessage = '';
@@ -93,12 +82,7 @@ export class Admin implements OnInit {
   toastVisible = false;
   private toastTimer: any;
 
-  // ── PENDING IMAGE ──
-  pendingProductImg: string | null = null;
-  productImgLabel = '📷 Choose image';
-
   ngOnInit(): void {
-    // In a real app, you would load data from your Spring Boot API here:
     this.loadCrusts();
     this.loadPizzaSize();
     this.loadProductCategories();
@@ -121,6 +105,7 @@ export class Admin implements OnInit {
     return this.categories.find(c => c.id === catId)?.name ?? '—';
   }
 
+  // Show a message on the screen
   showToast(message: string, type: 'success' | 'error' = 'success'): void {
     this.toastMessage = message;
     this.toastType = type;
@@ -129,7 +114,49 @@ export class Admin implements OnInit {
     this.toastTimer = setTimeout(() => (this.toastVisible = false), 2500);
   }
 
-  // ── ADD HANDLERS ──
+  // ── EDIT MODAL ──
+  closeModal(): void {
+    this.editModalOpen = false;
+    this.editingSection = null;
+    this.saveEditCallback = null;
+  }
+
+  // This method is called from the "Save Changes Button" on the model and uses the variable saveEditCallback to determine which update function to call
+  saveEdit(): void {
+    this.saveEditCallback?.();
+    this.closeModal();
+  }
+
+  // Set a property for the modal to show the correct fields
+  get editingProducts(): boolean {
+    return this.editingSection === 'products';
+  }
+
+  // Set a property for the modal to show the correct fields
+  get editingToppings(): boolean {
+    return this.editingSection === 'toppings';
+  }
+
+  // Set a property for the modal to show the correct fields
+  get editingCategories(): boolean {
+    return this.editingSection === 'categories';
+  }
+
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef,) { }
+
+  loadCrusts(): void {
+    this.http.get<CrustType[]>('/api/crust/getCrusts').subscribe({
+      next: data => {
+        this.crusts = data;
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error('Failed to fetch crusts:', err);
+        this.showToast('Could not load crusts.', 'error');
+      }
+    });
+  }
+
   addCrust(): void {
     const name = (this.newCrust.name ?? '').trim();
     if (!name) { this.showToast('Enter a crust name', 'error'); return; }
@@ -152,175 +179,31 @@ export class Admin implements OnInit {
     });
   }
 
-  addSize(): void {
-    const name = (this.newSize.name ?? '').trim();
-    if (!name) { this.showToast('Enter a size name', 'error'); return; }
-    this.sizes = [...this.sizes, {
-      id: this.nextId.sizes++,
-      name,
-      price: this.newSize.price ?? 0
-    }];
-    this.newSize = { name: '', price: undefined };
-    this.showToast('Size added!');
-  }
-
-  addCategory(): void {
-    const name = (this.newCategory.name ?? '').trim();
-    if (!name) { this.showToast('Enter a category name', 'error'); return; }
-    this.categories = [...this.categories, {
-      id: this.nextId.categories++,
-      name
-    }];
-    this.newCategory = { name: '' };
-    this.showToast('Category added!');
-  }
-
-  addProduct(): void {
-    const name = (this.newProduct.name ?? '').trim();
-    if (!name) { this.showToast('Enter a product name', 'error'); return; }
-    if (!this.newProduct.catId) { this.showToast('Select a category', 'error'); return; }
-    this.products = [...this.products, {
-      id: this.nextId.products++,
-      name,
-      catId: this.newProduct.catId,
-      price: this.newProduct.price ?? 0,
-      img: this.pendingProductImg
-    }];
-    this.newProduct = { name: '', catId: undefined, price: undefined, img: null };
-    this.pendingProductImg = null;
-    this.productImgLabel = '📷 Choose image';
-    this.showToast('Product added!');
-  }
-
-  addTopping(): void {
-    const name = (this.newTopping.name ?? '').trim();
-    if (!name) { this.showToast('Enter a topping name', 'error'); return; }
-    this.toppings = [...this.toppings, {
-      id: this.nextId.toppings++,
-      name,
-      cost: this.newTopping.cost ?? 0
-    }];
-    this.newTopping = { name: '', cost: undefined };
-    this.showToast('Topping added!');
-  }
-
-  // ── IMAGE UPLOAD ──
-  onProductImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      this.productImgLabel = '✅ ' + file.name.slice(0, 20);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.pendingProductImg = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  // ── DELETE ──
-  deleteItem(key: SectionKey, id: number): void {
-    if (!confirm('Delete this item?')) return;
-
-    this.http.delete(`/api/${key}/delete/${id}`).subscribe({
-      next: () => {
-        (this as any)[key] = (this as any)[key].filter((x: any) => x.id !== id);
-        this.cdr.detectChanges();
-        this.showToast('Item deleted.');
-      },
-      error: err => {
-        console.error('Failed to delete:', err);
-        this.showToast('Could not delete item.', 'error');
-      }
-    });
-  }
-
-  // ── EDIT MODAL ──
-  openEdit(key: SectionKey, id: number): void {
-    const list: any[] = (this as any)[key];
-    const item = list.find(x => x.id === id);
-    if (!item) return;
-    this.editContext = { key, id };
-    this.editName  = item.name ?? '';
-    this.editPrice = item.price ?? item.cost ?? 0;
-    this.editCatId = item.catId ?? 0;
+  updateCrust(crust: CrustType): void {
+    this.editName  = crust.name;
+    this.editPrice = crust.price;
     this.editModalOpen = true;
-  }
 
-  closeModal(): void {
-    this.editModalOpen = false;
-    this.editContext = null;
-  }
-
-  saveEdit(): void {
-    if (!this.editContext) return;
-    const { key, id } = this.editContext;
-    const list: any[] = (this as any)[key];
-    const index = list.findIndex(x => x.id === id);
-    if (index === -1) return;
-
-    const updated = { ...list[index], name: this.editName.trim() };
-    if (key === 'toppings') updated.cost  = this.editPrice;
-    else                    updated.price = this.editPrice;
-    if (key === 'products') updated.catId = this.editCatId;
-
-    // Immutable update so Angular's change detection picks it up
-    const newList = [...list];
-    newList[index] = updated;
-    (this as any)[key] = newList;
-
-    this.closeModal();
-    this.showToast('Changes saved!');
-  }
-
-  // ── MODAL LABEL HELPER ──
-  get editModalTitle(): string {
-    const labels: Record<SectionKey, string> = {
-      crust: 'Crust', sizes: 'Size', categories: 'Category',
-      products: 'Product', toppings: 'Topping'
+    this.saveEditCallback = () => {
+      const updated = { ...crust, name: this.editName.trim(), price: this.editPrice };
+      this.http.put<CrustType>(`/api/crust/update/${updated.id}`, updated).subscribe({
+        next: () => {
+          this.showToast('Crust Updated!');
+          this.loadCrusts();
+        },
+        error: err => {
+          console.error('Failed to update crust:', err);
+          this.showToast('Could not update crust.', 'error');
+        }
+      });
     };
-    return this.editContext ? 'Edit ' + labels[this.editContext.key] : 'Edit';
   }
-
-  get editingProducts(): boolean {
-    return this.editContext?.key === 'products';
-  }
-
-  get editingToppings(): boolean {
-    return this.editContext?.key === 'toppings';
-  }
-
-  get editingCategories(): boolean {
-    return this.editContext?.key === 'categories';
-  }
-
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef,) { }
-
-  loadCrusts(): void {
-    this.http.get<CrustType[]>('/api/crust/getCrusts').subscribe({
-      next: data => {
-        this.crusts = data;
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        console.error('Failed to fetch crusts:', err);
-        this.showToast('Could not load crusts.', 'error');
-      }
-    });
-  }
-
-  // saveCrust(crust: CrustType): void {
-  //   this.http.post<CrustType>('/api/crusts', crust).subscribe(() => this.loadCrusts());
-  // }
-  // updateCrust(crust: CrustType): void {
-  //   this.http.put<CrustType>(`/api/crusts/${crust.id}`, crust).subscribe(() => this.loadCrusts());
-  // }
   deleteCrust(id: number): void {
     if (!confirm('Delete this item?')) return;
 
     this.http.delete(`/api/crust/delete/${id}`).subscribe({
       next: () => {
-        this.showToast('Crust type Deleted!');
+        this.showToast('Crust Deleted!');
         this.loadCrusts(); // refresh list from backend
       },
       error: err => {
@@ -342,6 +225,64 @@ export class Admin implements OnInit {
       }
     });
   }
+
+  addPizzaSize(): void {
+    const name = (this.newSize.name ?? '').trim();
+    if (!name) { this.showToast('Enter a pizza size name', 'error'); return; }
+
+    const body = {
+      name,
+      price: this.newSize.price ?? 0
+    };
+
+    this.http.post<PizzaSize>('/api/pizzaSize/add', body).subscribe({
+      next: () => {
+        this.newSize = { name: '', price: undefined };
+        this.showToast('Pizza size added!');
+        this.loadPizzaSize(); // refresh list from backend
+      },
+      error: err => {
+        console.error('Failed to add pizza size:', err);
+        this.showToast('Could not add pizza size.', 'error');
+      }
+    });
+  }
+
+  updatePizzaSize(size: PizzaSize): void {
+    this.editName  = size.name;
+    this.editPrice = size.price;
+    this.editModalOpen = true;
+
+    this.saveEditCallback = () => {
+      const updated = { ...size, name: this.editName.trim(), price: this.editPrice };
+      this.http.put<PizzaSize>(`/api/pizzaSize/update/${updated.id}`, updated).subscribe({
+        next: () => {
+          this.showToast('Pizza Size Updated!');
+          this.loadPizzaSize(); // refresh list from backend
+        },
+        error: err => {
+          console.error('Failed to update pizza size:', err);
+          this.showToast('Could not update pizza size.', 'error');
+        }
+      });
+    };
+  }
+
+  deletePizzaSize(id: number): void {
+    if (!confirm('Delete this item?')) return;
+
+    this.http.delete(`/api/pizzaSize/delete/${id}`).subscribe({
+      next: () => {
+        this.showToast('Pizza size Deleted!');
+        this.loadPizzaSize(); // refresh list from backend
+      },
+      error: err => {
+        console.error('Failed to delete pizza size:', err);
+        this.showToast('Could not delete pizza size.', 'error');
+      }
+    });
+  }
+
   loadProductCategories(): void {
     this.http.get<ProductCategory[]>('/api/productCategory/getProductCategories').subscribe({
       next: data => {
@@ -354,6 +295,62 @@ export class Admin implements OnInit {
       }
     });
   }
+
+  addProductCategory(): void {
+    const name = (this.newCategory.name ?? '').trim();
+    if (!name) { this.showToast('Enter a category name', 'error'); return; }
+
+    const body = {
+      name
+    };
+
+    this.http.post<ProductCategory>('/api/productCategory/add', body).subscribe({
+      next: () => {
+        this.newCategory = { name: '' };
+        this.showToast('Category type added!');
+        this.loadProductCategories(); // refresh list from backend
+      },
+      error: err => {
+        console.error('Failed to add category:', err);
+        this.showToast('Could not add category.', 'error');
+      }
+    });
+  }
+
+  updateProductCategory(productCategory: ProductCategory): void {
+    this.editingSection = 'categories';
+    this.editName  = productCategory.name;
+    this.editModalOpen = true;
+
+    this.saveEditCallback = () => {
+      const updated = { ...productCategory, name: this.editName.trim() };
+      this.http.put<ProductCategory>(`/api/productCategory/update/${updated.id}`, updated).subscribe({
+        next: () => {
+          this.showToast('Category Updated!');
+          this.loadProductCategories(); // refresh list from backend
+        },
+        error: err => {
+          console.error('Failed to update category:', err);
+          this.showToast('Could not update category.', 'error');
+        }
+      });
+    };
+  }
+  deleteProductCategory(id: number): void {
+    if (!confirm('Delete this item?')) return;
+
+    this.http.delete(`/api/productCategory/delete/${id}`).subscribe({
+      next: () => {
+        this.showToast('Category Deleted!');
+        this.loadProductCategories(); // refresh list from backend
+      },
+      error: err => {
+        console.error('Failed to delete category:', err);
+        this.showToast('Could not delete category.', 'error');
+      }
+    });
+  }
+
   loadProducts(): void {
     this.http.get<Product[]>('/api/product/getProducts').subscribe({
       next: data => {
@@ -366,6 +363,66 @@ export class Admin implements OnInit {
       }
     });
   }
+
+  addProduct(): void {
+    const name = (this.newProduct.name ?? '').trim();
+    if (!name) { this.showToast('Enter a product name', 'error'); return; }
+
+    const body = {
+      name,
+      catId: this.newProduct.catId,
+      price: this.newProduct.price ?? 0
+    };
+
+    this.http.post<Product>('/api/product/add', body).subscribe({
+      next: () => {
+        this.newProduct = { id: 0, name: '', catId: undefined, price: undefined };
+        this.showToast('Product added!');
+        this.loadProducts(); // refresh list from backend
+      },
+      error: err => {
+        console.error('Failed to add product:', err);
+        this.showToast('Could not add product.', 'error');
+      }
+    });
+  }
+
+  updateProduct(product: Product): void {
+    this.editingSection = 'products';
+    this.editName  = product.name;
+    this.editPrice = product.price;
+    this.editCatId = product.catId;
+    this.editModalOpen = true;
+
+    this.saveEditCallback = () => {
+      const updated = { ...product, name: this.editName.trim(), catId: this.editCatId, price: this.editPrice };
+      this.http.put<Product>(`/api/product/update/${updated.id}`, updated).subscribe({
+        next: () => {
+          this.showToast('Product Updated!');
+          this.loadProducts(); // refresh list from backend
+        },
+        error: err => {
+          console.error('Failed to update product:', err);
+          this.showToast('Could not update product.', 'error');
+        }
+      });
+    };
+  }
+  deleteProduct(id: number): void {
+    if (!confirm('Delete this item?')) return;
+
+    this.http.delete(`/api/product/delete/${id}`).subscribe({
+      next: () => {
+        this.showToast('Product Deleted!');
+        this.loadProducts(); // refresh list from backend
+      },
+      error: err => {
+        console.error('Failed to delete product:', err);
+        this.showToast('Could not delete product.', 'error');
+      }
+    });
+  }
+
   loadTopping(): void {
     this.http.get<Topping[]>('/api/topping/getToppings').subscribe({
       next: data => {
@@ -375,6 +432,63 @@ export class Admin implements OnInit {
       error: err => {
         console.error('Failed to fetch toppings:', err);
         this.showToast('Could not load toppings.', 'error');
+      }
+    });
+  }
+
+  addTopping(): void {
+    const name = (this.newTopping.name ?? '').trim();
+    if (!name) { this.showToast('Enter a topping name', 'error'); return; }
+
+    const body = {
+      name,
+      cost: this.newTopping.cost ?? 0
+    };
+
+    this.http.post<Topping>('/api/topping/add', body).subscribe({
+      next: () => {
+        this.newTopping = { name: '', cost: undefined };
+        this.showToast('Topping added!');
+        this.loadTopping(); // refresh list from backend
+      },
+      error: err => {
+        console.error('Failed to add topping:', err);
+        this.showToast('Could not add topping.', 'error');
+      }
+    });
+  }
+
+  updateTopping(topping: Topping): void {
+    this.editingSection = 'toppings';
+    this.editName  = topping.name;
+    this.editPrice = topping.cost;
+    this.editModalOpen = true;
+
+    this.saveEditCallback = () => {
+      const updated = { ...topping, name: this.editName.trim(), cost: this.editPrice };
+      this.http.put<Topping>(`/api/topping/update/${updated.id}`, updated).subscribe({
+        next: () => {
+          this.showToast('Topping Updated!');
+          this.loadTopping();
+        },
+        error: err => {
+          console.error('Failed to update topping:', err);
+          this.showToast('Could not update topping.', 'error');
+        }
+      });
+    };
+  }
+  deleteTopping(id: number): void {
+    if (!confirm('Delete this item?')) return;
+
+    this.http.delete(`/api/topping/delete/${id}`).subscribe({
+      next: () => {
+        this.showToast('Topping Deleted!');
+        this.loadTopping(); // refresh list from backend
+      },
+      error: err => {
+        console.error('Failed to delete topping:', err);
+        this.showToast('Could not delete topping.', 'error');
       }
     });
   }

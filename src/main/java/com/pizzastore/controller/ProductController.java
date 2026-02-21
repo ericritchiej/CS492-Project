@@ -24,27 +24,27 @@ public class ProductController {
         // TODO: Replace with call to ProductRepository
 
         return ResponseEntity.ok(List.of(
-                Map.of("id", 1, "name", "Soda Stub",  "catId", 1, "price", 1.00, "img" ,"img1"),
-                Map.of("id", 1, "name", "Brownie Stub",  "catId", 2, "price", 2.00, "img" ,"img1"),
-                Map.of("id", 1, "name", "Breadstick Stub",  "catId", 3, "price", 5.88, "img" ,"img1")
+                Map.of("id", 1, "name", "Soda Stub",  "catId", 1, "price", 1.00),
+                Map.of("id", 2, "name", "Brownie Stub",  "catId", 2, "price", 2.00),
+                Map.of("id", 3, "name", "Breadstick Stub",  "catId", 3, "price", 5.88)
         ));
     }
 
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addProduct(@RequestBody Map<String, Object> product) {
-        logger.info("Adding product");
+        logger.info("Adding product {}", product.toString());
         // TODO: save to database
         return ResponseEntity.ok(product);
     }
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Map<String, Object>> deleteProduct(@PathVariable int id) {
-        logger.info("Deleting product");
+        logger.info("Deleting product {}", id);
         // TODO: delete from database
         return ResponseEntity.ok().build();
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<Map<String, Object>> update(@RequestBody Map<String, Object> product) {
-        logger.info("Updating product");
+    public ResponseEntity<Map<String, Object>> updateProduct(@PathVariable int id, @RequestBody Map<String, Object> product) {
+        logger.info("Updating product id={}, body={}", id, product);
 
         // TODO: update database
         return ResponseEntity.ok(product);

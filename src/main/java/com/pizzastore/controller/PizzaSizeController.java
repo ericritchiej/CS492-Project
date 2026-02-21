@@ -32,19 +32,19 @@ public class PizzaSizeController {
 
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addPizzaSize(@RequestBody Map<String, Object> pizzaSize) {
-        logger.info("Adding pizza Size");
+        logger.info("Adding pizza size{}", pizzaSize.toString());
         // TODO: save to database
         return ResponseEntity.ok(pizzaSize);
     }
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Map<String, Object>> deletePizzaSize(@PathVariable int id) {
-        logger.info("Deleting pizza size");
+        logger.info("Deleting pizza size {}", id);
         // TODO: delete from database
         return ResponseEntity.ok().build();
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<Map<String, Object>> update(@RequestBody Map<String, Object> pizzaSize) {
-        logger.info("Updating pizza size");
+    public ResponseEntity<Map<String, Object>> updatePizzaSize(@PathVariable int id, @RequestBody Map<String, Object> pizzaSize) {
+        logger.info("Updating pizza size id={}, body={}", id, pizzaSize);
 
         // TODO: update database
         return ResponseEntity.ok(pizzaSize);
