@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,12 +111,18 @@ public class AuthController {
      * "not logged in" — in a real app this would check a session or token.
      */
     @GetMapping("/status")
-    public Map<String, Object> getStatus() {
+    public Map<String, Object> getStatus(HttpSession session) {
         // HashMap is a key-value data structure. When Spring returns it,
         // it gets automatically converted to JSON like: { "loggedIn": false, "message": "..." }
         Map<String, Object> status = new HashMap<>();
-        status.put("loggedIn", false);
-        status.put("message", "No user is currently logged in.");
+        Object userId = session.getAttribute("userId");
+        if (userId != null) {
+            status.put("loggedIn", true);
+            status.put("message", "User is logged in.");
+        } else {
+            status.put("loggedIn", false);
+            status.put("message", "No user is currently logged in.");
+        }
         return status;
     }
 
@@ -153,7 +160,7 @@ public class AuthController {
      * The "?" means it can return different types depending on success or failure.
      */
     @PostMapping("/signIn/customer")
-    public ResponseEntity<?> handleCustomerSignIn(@RequestBody SignInRequest request) {
+    public ResponseEntity<?> handleCustomerSignIn(@RequestBody SignInRequest request, HttpSession session) {
         String username = request.username();
         String password = request.password();
 
@@ -190,6 +197,9 @@ public class AuthController {
             // and checks if it matches. This is the secure way to verify passwords.
             if (passwordEncoder.matches(password, user.getPassword())) {
                 logger.info("Password Match");
+                session.setAttribute("userId", user.getId());
+                session.setAttribute("email", user.getEmail());
+                session.setAttribute("role", "Customer");
                 return ResponseEntity.ok(buildUserResponse("Login successful", user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(), "Customer"));
             }
         }
@@ -217,7 +227,7 @@ public class AuthController {
      * The "?" means it can return different types depending on success or failure.
      */
     @PostMapping("/signIn/employee")
-    public ResponseEntity<?> handleEmployeeSignIn(@RequestBody SignInRequest request) {
+    public ResponseEntity<?> handleEmployeeSignIn(@RequestBody SignInRequest request, HttpSession session) {
         String username = request.username();
         String password = request.password();
 
@@ -253,6 +263,9 @@ public class AuthController {
             // We never "decrypt" the hash — instead BCrypt re-hashes the input
             // and checks if it matches. This is the secure way to verify passwords.
             if (passwordEncoder.matches(password, employee.getPassword())) {
+                session.setAttribute("userId", employee.getEmployeeId());
+                session.setAttribute("email", employee.getEmail());
+                session.setAttribute("role", employee.getRole());
                 return ResponseEntity.ok(buildUserResponse("Employee Login successful", employee.getEmployeeId(), employee.getEmail(), employee.getFirstName(), employee.getLastName(), employee.getRole()));
             }
         }

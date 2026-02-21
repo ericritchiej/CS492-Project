@@ -8,30 +8,67 @@
   margin-bottom: 1.5rem;
 }
 
-.profile-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  max-width: 500px;
+.status-message {
+  color: #e65100;
+  margin-bottom: 1rem;
+}
+
+.profile-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-width: 400px;
 }
 
-.profile-field {
+.profile-form label {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  font-weight: 500;
 }
 
-.field-label {
-  font-size: 0.8rem;
-  color: #666;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.field-value {
+.profile-form input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
   font-size: 1rem;
-  color: #333;
+}
+
+.profile-form button {
+  padding: 0.625rem 1.25rem;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.profile-form button:hover {
+  background-color: #b71c1c;
+}
+
+.error {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid #d32f2f;
+  border-radius: 6px;
+  background: #fdecea;
+  color: #b71c1c;
+  font-size: 0.95rem;
+}
+.field-error {
+  color: #d9534f; /* A standard red error color */
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+}
+
+input.ng-invalid.ng-touched {
+  border: 1px solid #d9534f; /* Highlights the box red when invalid */
+}
+
+.success-message {
+  color: #2e7d32;
+  margin-bottom: 1rem;
 }

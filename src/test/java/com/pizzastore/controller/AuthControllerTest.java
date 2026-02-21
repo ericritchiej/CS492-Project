@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.servlet.http.HttpSession;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ class AuthControllerTest {
     private EmployeeRepository employeeRepository;
     private UserTypeResolver userTypeResolver;
     private PasswordEncoder passwordEncoder;
+    private HttpSession session;
     private AuthController controller;
 
     // BCrypt hash of "Pizza123!" — used so passwordEncoder.matches() returns true
@@ -36,7 +38,28 @@ class AuthControllerTest {
         employeeRepository = mock(EmployeeRepository.class);
         userTypeResolver = mock(UserTypeResolver.class);
         passwordEncoder = mock(PasswordEncoder.class);
+        session = mock(HttpSession.class);
         controller = new AuthController(userRepository, userTypeResolver, employeeRepository, passwordEncoder);
+    }
+
+    // --- status endpoint ---
+
+    @Test
+    void statusReturnsFalseWhenNoSession() {
+        when(session.getAttribute("userId")).thenReturn(null);
+
+        Map<String, Object> status = controller.getStatus(session);
+
+        assertEquals(false, status.get("loggedIn"));
+    }
+
+    @Test
+    void statusReturnsTrueWhenSessionHasUserId() {
+        when(session.getAttribute("userId")).thenReturn(1L);
+
+        Map<String, Object> status = controller.getStatus(session);
+
+        assertEquals(true, status.get("loggedIn"));
     }
 
     // --- identify endpoint ---
@@ -85,17 +108,14 @@ class AuthControllerTest {
         user.setEmail("jane@gmail.com");
         user.setFirstName("Jane");
         user.setLastName("Doe");
-        // Use a real BCrypt hash so the encoder can verify it
-        user.setPassword(org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-                .class.getName()); // placeholder — we'll use a real hash below
-        // Generate a real hash for "Pizza123!"
         String realHash = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()
                 .encode("Pizza123!");
         user.setPassword(realHash);
         when(userRepository.findByUsername("jane@gmail.com")).thenReturn(List.of(user));
         when(passwordEncoder.matches("Pizza123!", realHash)).thenReturn(true);
 
-        ResponseEntity<?> response = controller.handleCustomerSignIn(new AuthController.SignInRequest("jane@gmail.com", "Pizza123!"));
+        ResponseEntity<?> response = controller.handleCustomerSignIn(
+                new AuthController.SignInRequest("jane@gmail.com", "Pizza123!"), session);
 
         assertEquals(200, response.getStatusCodeValue());
         Map<?, ?> body = (Map<?, ?>) response.getBody();
@@ -105,6 +125,10 @@ class AuthControllerTest {
         assertEquals("Doe", userDto.get("lastName"));
         // Password hash must NOT be in the response
         assertNull(userDto.get("password"));
+        // Session should have been populated
+        verify(session).setAttribute("userId", 1L);
+        verify(session).setAttribute("email", "jane@gmail.com");
+        verify(session).setAttribute("role", "Customer");
     }
 
     @Test
@@ -118,9 +142,11 @@ class AuthControllerTest {
         when(userRepository.findByUsername("jane@gmail.com")).thenReturn(List.of(user));
         when(passwordEncoder.matches("WrongPass!", realHash)).thenReturn(false);
 
-        ResponseEntity<?> response = controller.handleCustomerSignIn(new AuthController.SignInRequest("jane@gmail.com", "WrongPass!"));
+        ResponseEntity<?> response = controller.handleCustomerSignIn(
+                new AuthController.SignInRequest("jane@gmail.com", "WrongPass!"), session);
 
         assertEquals(401, response.getStatusCodeValue());
+        verify(session, never()).setAttribute(any(), any());
     }
 
     @Test
@@ -128,18 +154,22 @@ class AuthControllerTest {
         when(userTypeResolver.resolve("nobody@gmail.com")).thenReturn(LoginType.CUSTOMER);
         when(userRepository.findByUsername("nobody@gmail.com")).thenReturn(Collections.emptyList());
 
-        ResponseEntity<?> response = controller.handleCustomerSignIn(new AuthController.SignInRequest("nobody@gmail.com", "Pizza123!"));
+        ResponseEntity<?> response = controller.handleCustomerSignIn(
+                new AuthController.SignInRequest("nobody@gmail.com", "Pizza123!"), session);
 
         assertEquals(401, response.getStatusCodeValue());
+        verify(session, never()).setAttribute(any(), any());
     }
 
     @Test
     void customerSigninRejectsWorkerEmail() {
         when(userTypeResolver.resolve("bob@work.com")).thenReturn(LoginType.WORKER);
 
-        ResponseEntity<?> response = controller.handleCustomerSignIn(new AuthController.SignInRequest("bob@work.com", "Pizza123!"));
+        ResponseEntity<?> response = controller.handleCustomerSignIn(
+                new AuthController.SignInRequest("bob@work.com", "Pizza123!"), session);
 
         assertEquals(401, response.getStatusCodeValue());
+        verify(session, never()).setAttribute(any(), any());
     }
 
     // --- employee signin ---
@@ -160,7 +190,8 @@ class AuthControllerTest {
         when(employeeRepository.findByUsername("bob@work.com")).thenReturn(List.of(employee));
         when(passwordEncoder.matches("Pizza123!", realHash)).thenReturn(true);
 
-        ResponseEntity<?> response = controller.handleEmployeeSignIn(new AuthController.SignInRequest("bob@work.com", "Pizza123!"));
+        ResponseEntity<?> response = controller.handleEmployeeSignIn(
+                new AuthController.SignInRequest("bob@work.com", "Pizza123!"), session);
 
         assertEquals(200, response.getStatusCodeValue());
         Map<?, ?> body = (Map<?, ?>) response.getBody();
@@ -169,6 +200,10 @@ class AuthControllerTest {
         assertEquals("Bob", userDto.get("firstName"));
         assertEquals("Manager", userDto.get("role"));
         assertNull(userDto.get("password"));
+        // Session should have been populated
+        verify(session).setAttribute("userId", 10L);
+        verify(session).setAttribute("email", "bob@work.com");
+        verify(session).setAttribute("role", "Manager");
     }
 
     @Test
@@ -182,18 +217,22 @@ class AuthControllerTest {
         when(employeeRepository.findByUsername("bob@work.com")).thenReturn(List.of(employee));
         when(passwordEncoder.matches("WrongPass!", realHash)).thenReturn(false);
 
-        ResponseEntity<?> response = controller.handleEmployeeSignIn(new AuthController.SignInRequest("bob@work.com", "WrongPass!"));
+        ResponseEntity<?> response = controller.handleEmployeeSignIn(
+                new AuthController.SignInRequest("bob@work.com", "WrongPass!"), session);
 
         assertEquals(401, response.getStatusCodeValue());
+        verify(session, never()).setAttribute(any(), any());
     }
 
     @Test
     void employeeSigninRejectsCustomerEmail() {
         when(userTypeResolver.resolve("jane@gmail.com")).thenReturn(LoginType.CUSTOMER);
 
-        ResponseEntity<?> response = controller.handleEmployeeSignIn(new AuthController.SignInRequest("jane@gmail.com", "Pizza123!"));
+        ResponseEntity<?> response = controller.handleEmployeeSignIn(
+                new AuthController.SignInRequest("jane@gmail.com", "Pizza123!"), session);
 
         assertEquals(401, response.getStatusCodeValue());
+        verify(session, never()).setAttribute(any(), any());
     }
 
     // --- registration ---
@@ -206,7 +245,6 @@ class AuthControllerTest {
         when(userRepository.createUser(any(User.class), any(com.pizzastore.model.Address.class)))
                 .thenReturn(42L);
 
-        // Use reflection to invoke since RegisterRequest is package-private
         ResponseEntity<?> response = controller.handleRegister(
                 new AuthController.RegisterRequest("Jane", "Doe", "555-1234",
                         "123 Main St", "", "Springfield", "IL", "62701",
