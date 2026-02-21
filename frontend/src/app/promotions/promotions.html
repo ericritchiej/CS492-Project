@@ -1,0 +1,92 @@
+<div class="promotions-page">
+  <h2>Promotions</h2>
+  <p class="subtitle">All promotions currently in the database</p>
+
+  <div class="toolbar">
+    <button class="add-btn" type="button" (click)="addNewPromotionRow()">Add Promotion</button>
+  </div>
+
+  @if (message()) {
+    <div class="msg" [class.success]="message()!.type === 'success'" [class.error]="message()!.type === 'error'">
+      {{ message()!.text }}
+    </div>
+  }
+
+  @if (loading()) {
+    <p>Loading promotions...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (promotions().length === 0) {
+    <p>No promotions found.</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="promotions-table">
+        <thead>
+          <tr>
+            @for (col of columns(); track col) {
+              <th>{{ col }}</th>
+            }
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (promo of promotions(); track trackPromoRow(promo, $index); let rowIndex = $index) {
+            <tr [class.new-row]="!!promo['__isNew']">
+              @for (col of columns(); track col) {
+                <td>
+                  @if (isEditable(col)) {
+                    <input
+                      class="cell-input"
+                      [value]="promo[col] ?? ''"
+                      (input)="updateField(rowIndex, col, ($any($event.target).value))"
+                      [placeholder]="promo['__isNew'] ? 'Enter ' + col : ''"
+                    />
+                  } @else {
+                    @if (promo['__isNew']) {
+                      <span class="auto-id">(auto)</span>
+                    } @else {
+                      {{ promo[col] ?? '' }}
+                    }
+                  }
+                </td>
+              }
+
+              <td class="actions-col">
+                <button
+                  class="save-btn"
+                  (click)="save(rowIndex)"
+                  [disabled]="!promo['__isNew'] && savingId() === +promo['promotion_id']"
+                >
+                  @if (!promo['__isNew'] && savingId() === +promo['promotion_id']) {
+                    Saving...
+                  } @else if (promo['__isNew']) {
+                    Create
+                  } @else {
+                    Save
+                  }
+                </button>
+
+                @if (promo['__isNew']) {
+                  <button class="cancel-btn" type="button" (click)="cancelNew(rowIndex)">Cancel</button>
+                } @else {
+                  <button
+                    class="delete-btn"
+                    (click)="delete(rowIndex)"
+                    [disabled]="deletingId() === +promo['promotion_id'] || savingId() === +promo['promotion_id']"
+                  >
+                    @if (deletingId() === +promo['promotion_id']) {
+                      Deleting...
+                    } @else {
+                      Delete
+                    }
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

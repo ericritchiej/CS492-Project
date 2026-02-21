@@ -1,0 +1,83 @@
+.promotions-page {
+  padding: 12px 0;
+}
+
+.subtitle {
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.toolbar {
+  margin-top: 12px;
+}
+
+.add-btn {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.promotions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.promotions-table th,
+.promotions-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  vertical-align: top;
+}
+
+.cell-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px;
+}
+
+.actions-col {
+  white-space: nowrap;
+}
+
+.save-btn,
+.delete-btn,
+.cancel-btn {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.delete-btn,
+.cancel-btn {
+  margin-left: 8px;
+}
+
+.auto-id {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.new-row td {
+  background: rgba(255, 235, 59, 0.08);
+}
+
+.msg {
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.msg.success {
+  border: 1px solid #2e7d32;
+}
+
+.msg.error {
+  border: 1px solid #b00020;
+}
+
+.error {
+  color: #b00020;
+}
