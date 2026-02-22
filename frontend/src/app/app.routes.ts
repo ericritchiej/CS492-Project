@@ -42,7 +42,7 @@ export const routes: Routes = [
    * displays the first component whose path matches.
    */
   // when a user comes directly to the root, redirect them to the menu page.
-  { path: '', redirectTo: '/menu', pathMatch: 'full' },
+  { path: '', redirectTo: '/restaurant-info', pathMatch: 'full' },
 
   // The main menu page showing food items available to order
   { path: 'menu', component: Menu },

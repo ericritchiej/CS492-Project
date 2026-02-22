@@ -34,7 +34,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Crust Name</label>
-            <input type="text" [(ngModel)]="newCrust.name" placeholder="e.g. Thin Crust">
+            <input type="text" [(ngModel)]="newCrust.crustName" placeholder="e.g. Thin Crust">
           </div>
           <div class="form-group" style="max-width:130px">
             <label>Price ($)</label>
@@ -48,15 +48,15 @@
         <tr><th>#</th><th>Name</th><th>Price</th><th style="text-align:right">Actions</th></tr>
         </thead>
         <tbody>
-          @for (crust of crusts; track crust.id; let i = $index) {
+          @for (crust of crusts; track crust.crustId; let i = $index) {
             <tr>
               <td style="color:var(--gray-400);font-size:0.82rem">{{ i + 1 }}</td>
-              <td><strong>{{ crust.name }}</strong></td>
+              <td><strong>{{ crust.crustName }}</strong></td>
               <td class="price-cell">{{ formatPrice(crust.price) }}</td>
               <td class="actions">
                 <div class="actions-inner">
                   <button class="btn btn-icon btn-edit" title="Edit" (click)="updateCrust(crust)">✏️</button>
-                  <button class="btn btn-icon btn-danger" title="Delete" (click)="deleteCrust(crust.id)">🗑️</button>
+                  <button class="btn btn-icon btn-danger" title="Delete" (click)="deleteCrust(crust.crustId)">🗑️</button>
                 </div>
               </td>
             </tr>

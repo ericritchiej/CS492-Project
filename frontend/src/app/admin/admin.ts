@@ -6,8 +6,8 @@ import { RouterLink } from '@angular/router';
 
 // ── INTERFACES ──
 interface CrustType {
-  id: number;
-  name: string;
+  crustId: number;
+  crustName: string;
   price: number;
 }
 
@@ -63,7 +63,7 @@ export class Admin implements OnInit {
   toppings: Topping[] = [];
 
   // ── ADD FORM MODELS ──
-  newCrust:    Partial<CrustType>       = { name: '', price: undefined };
+  newCrust:    Partial<CrustType>       = { crustName: '', price: undefined };
   newSize:     Partial<PizzaSize>       = { name: '', price: undefined };
   newCategory: Partial<ProductCategory> = { name: '' };
   newProduct:  Partial<Product>         = { name: '', catId: undefined, price: undefined };
@@ -159,17 +159,17 @@ export class Admin implements OnInit {
   }
 
   addCrust(): void {
-    const name = (this.newCrust.name ?? '').trim();
+    const name = (this.newCrust.crustName ?? '').trim();
     if (!name) { this.showToast('Enter a crust name', 'error'); return; }
 
     const body = {
-      name,
+      crustName: name,
       price: this.newCrust.price ?? 0
     };
 
     this.http.post<CrustType>('/api/crust/add', body).subscribe({
       next: () => {
-        this.newCrust = { name: '', price: undefined };
+        this.newCrust = { crustName: '', price: undefined };
         this.showToast('Crust type added!');
         this.loadCrusts(); // refresh list from backend
       },
@@ -181,13 +181,13 @@ export class Admin implements OnInit {
   }
 
   updateCrust(crust: CrustType): void {
-    this.editName  = crust.name;
+    this.editName  = crust.crustName;
     this.editPrice = crust.price;
     this.editModalOpen = true;
 
     this.saveEditCallback = () => {
-      const updated = { ...crust, name: this.editName.trim(), price: this.editPrice };
-      this.http.put<CrustType>(`/api/crust/update/${updated.id}`, updated).subscribe({
+      const updated = { ...crust, crustName: this.editName.trim(), price: this.editPrice };
+      this.http.put<CrustType>(`/api/crust/update/${updated.crustId}`, updated).subscribe({
         next: () => {
           this.showToast('Crust Updated!');
           this.loadCrusts();

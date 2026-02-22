@@ -95,7 +95,7 @@ Open your browser and go to:
 http://localhost:4200
 ```
 
-You will see the **Pizza Store** header with a navigation bar. After logging in or creating an account, the logged-in user's name is displayed in the nav bar. The nav contains:
+You will be redirected to the **Restaurant Info** page by default. After logging in or creating an account, the logged-in user's name is displayed in the nav bar. The nav contains:
 
 - **Menu** — Browse the pizza menu with crust types and prices
 - **Restaurant Info** — View the restaurant name, address, phone, hours, and current promotions
@@ -147,6 +147,7 @@ PizzaStore/
 │       └── controller/                       # REST controllers (handle HTTP requests)
 │           ├── AuthController.java           # Authentication: sign-in & registration
 │           ├── PizzaController.java          # Pizzas, orders, stats endpoints
+│           ├── CrustTypeController.java      # Crust type CRUD endpoints
 │           ├── RestaurantInfoController.java # Restaurant details endpoint
 │           ├── RestaurantHoursController.java# Restaurant hours endpoint
 │           ├── PromotionController.java      # Promotions endpoint
@@ -179,6 +180,7 @@ PizzaStore/
 │   └── controller/
 │       ├── AuthControllerTest.java          # Tests for login, registration, identify
 │       ├── PizzaControllerTest.java         # Tests for menu, orders, stats endpoints
+│       ├── CrustTypeControllerTest.java     # Tests for crust type CRUD endpoints
 │       ├── CheckoutControllerTest.java      # Tests for checkout summary math
 │       ├── PromotionControllerTest.java     # Tests for promotions endpoint
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
@@ -199,7 +201,10 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | Endpoint | Description |
 | --- | --- |
 | `GET /api/pizzas` | List all pizzas |
-| `GET /api/crust-types` | List crust types |
+| `GET /api/crust/getCrusts` | List all crust types |
+| `POST /api/crust/add` | Add a new crust type |
+| `PUT /api/crust/update/{id}` | Update an existing crust type |
+| `DELETE /api/crust/delete/{id}` | Delete a crust type |
 | `GET /api/orders` | List all orders |
 | `GET /api/stats` | Get store statistics |
 | `GET /api/restaurant-info` | Get restaurant name, address, and phone number |
