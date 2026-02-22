@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/promotions")
+@RequestMapping("/api/restaurant-info/promotions")
 public class PromotionController {
 
     private static final Logger logger = LoggerFactory.getLogger(PromotionController.class);

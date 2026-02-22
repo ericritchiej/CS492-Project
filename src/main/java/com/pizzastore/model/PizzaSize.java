@@ -8,20 +8,20 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "crust_types")
+@Table(name = "pizza_sizes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class CrustType {
+public class PizzaSize {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "crust_id")
-    private Long crustId;
+    @Column(name = "size_id")
+    private Long sizeId;
 
-    @Column(name = "crust_name")
-    private String crustName;
+    @Column(name = "size_name")
+    private String sizeName;
 
     @Column(name = "price")
     private BigDecimal price;

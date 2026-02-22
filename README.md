@@ -95,7 +95,7 @@ Open your browser and go to:
 http://localhost:4200
 ```
 
-You will see the **Pizza Store** header with a navigation bar. After logging in or creating an account, the logged-in user's name is displayed in the nav bar. The nav contains:
+You will be redirected to the **Restaurant Info** page by default. After logging in or creating an account, the logged-in user's name is displayed in the nav bar. The nav contains:
 
 - **Menu** — Browse the pizza menu with crust types and prices
 - **Restaurant Info** — View the restaurant name, address, phone, hours, and current promotions
@@ -103,7 +103,7 @@ You will see the **Pizza Store** header with a navigation bar. After logging in 
   - **Previous Orders** — View order history and delivery status
   - **Profile** — View customer profile details
   - **Login** — Sign-in page with username/password fields and form validation
-  - **New Account** — Create a new account with personal info, address, email, and password
+  - **Manager Login** — Employee/manager sign-in page
   - **Admin** — Store dashboard with daily stats (links to Reporting)
 - **Shopping Cart** (cart icon) — View cart items and total
   - Links to the **Order Confirmation & Payment** page (Checkout)
@@ -126,12 +126,18 @@ PizzaStore/
 ├── src/main/java/
 │   └── com/pizzastore/                       # Java backend (Spring Boot)
 │       ├── PizzaStoreApplication.java        # Application entry point
-│       ├── SecurityBeans.java                # Spring Security config (BCrypt password hashing)
+│       ├── config/                           # App-wide configuration
+│       │   ├── CorsConfig.java               # CORS policy (allows frontend on port 4200)
+│       │   └── SecurityBeans.java            # Spring Security config (BCrypt password hashing)
 │       ├── model/                            # Data models (one class per database table)
 │       │   ├── User.java                     # Customer account model
 │       │   ├── Employee.java                 # Employee account model
 │       │   ├── Address.java                  # Customer address model
 │       │   ├── CrustType.java                # Pizza crust option model
+│       │   ├── PizzaSize.java                # Pizza size option model
+│       │   ├── ProductCategory.java          # Product category model
+│       │   ├── Product.java                  # Menu product model
+│       │   ├── Promotion.java                # Promotional discount model
 │       │   ├── RestaurantInfo.java           # Restaurant name, address, phone, description
 │       │   ├── RestaurantHours.java          # Restaurant hours rows (one row per display line)
 │       │   └── LoginType.java                # Enum: WORKER, CUSTOMER, UNKNOWN
@@ -140,20 +146,31 @@ PizzaStore/
 │       ├── repository/                       # Database repositories (run the SQL queries)
 │       │   ├── UserRepository.java           # Customer lookup and registration queries
 │       │   ├── EmployeeRepository.java       # Employee lookup queries
-│       │   ├── CrustTypeRepository.java      # Crust type queries
+│       │   ├── CrustTypeRepository.java      # Crust type CRUD queries
+│       │   ├── PizzaSizeRepository.java      # Pizza size CRUD queries
+│       │   ├── ProductCategoryRepository.java# Product category CRUD queries
+│       │   ├── ProductRepository.java        # Product CRUD queries
+│       │   ├── PromotionsRepository.java     # Promotions CRUD queries
 │       │   ├── RestaurantInfoRepository.java # Fetches restaurant details
 │       │   ├── RestaurantHoursRepository.java# Fetches restaurant hours rows
-│       │   └── PromotionRepository.java      # Fetches active promotions
+│       │   └── PromotionRepository.java      # Fetches active promotions (read-only)
 │       └── controller/                       # REST controllers (handle HTTP requests)
 │           ├── AuthController.java           # Authentication: sign-in & registration
 │           ├── PizzaController.java          # Pizzas, orders, stats endpoints
+│           ├── CrustTypeController.java      # Crust type CRUD endpoints
+│           ├── PizzaSizeController.java      # Pizza size CRUD endpoints
+│           ├── ProductCategoryController.java# Product category CRUD endpoints
+│           ├── ProductController.java        # Product CRUD endpoints
+│           ├── ToppingController.java        # Topping CRUD endpoints
+│           ├── PromotionsController.java     # Promotions CRUD endpoints
+│           ├── UserController.java           # User profile endpoints
 │           ├── RestaurantInfoController.java # Restaurant details endpoint
 │           ├── RestaurantHoursController.java# Restaurant hours endpoint
-│           ├── PromotionController.java      # Promotions endpoint
-│           ├── ProfileController.java        # Customer profile
+│           ├── PromotionController.java      # Promotions read endpoint (public-facing)
 │           ├── CartController.java           # Shopping cart
 │           ├── CheckoutController.java       # Checkout / order summary
 │           ├── ReportingController.java      # Store reports
+│           ├── SpaController.java            # Serves Angular's index.html for client-side routes
 │           └── GlobalExceptionHandler.java   # Catches unhandled errors and returns 500
 ├── src/main/resources/
 │   └── application.properties               # Server and database configuration
@@ -163,13 +180,16 @@ PizzaStore/
 │       ├── app.ts, app.html, app.css        # Root component with nav bar
 │       ├── app.routes.ts                    # Route definitions
 │       ├── auth.service.ts                  # Shared auth state (logged-in user)
+│       ├── auth-http.service.ts             # HTTP calls for auth endpoints
 │       ├── menu/                            # Menu page
 │       ├── orders/                          # Previous Orders page
-│       ├── admin/                           # Admin dashboard
+│       ├── admin/                           # Admin dashboard (crust, size, category, product, topping CRUD)
 │       ├── login/                           # Login page
-│       ├── new-account/                     # New Account page
+│       ├── manager-login/                   # Manager/employee login page
+│       ├── newAccount/                      # New Account page
 │       ├── restaurant-info/                 # Restaurant Info page
 │       ├── profile/                         # Customer Profile page
+│       ├── promotions/                      # Promotions management page
 │       ├── cart/                            # Shopping Cart page
 │       ├── checkout/                        # Order Confirmation & Payment page
 │       └── reporting/                       # Reporting page
@@ -178,7 +198,12 @@ PizzaStore/
 │   │   └── UserTypeResolverTest.java        # Tests for email domain routing logic
 │   └── controller/
 │       ├── AuthControllerTest.java          # Tests for login, registration, identify
-│       ├── PizzaControllerTest.java         # Tests for menu, orders, stats endpoints
+│       ├── CrustTypeControllerTest.java     # Tests for crust type CRUD endpoints
+│       ├── PizzaSizeControllerTest.java     # Tests for pizza size CRUD endpoints
+│       ├── ProductCategoryControllerTest.java # Tests for product category CRUD endpoints
+│       ├── ProductControllerTest.java       # Tests for product CRUD endpoints
+│       ├── ToppingControllerTest.java       # Tests for topping CRUD endpoints
+│       ├── UserControllerTest.java          # Tests for user profile GET and PUT endpoints
 │       ├── CheckoutControllerTest.java      # Tests for checkout summary math
 │       ├── PromotionControllerTest.java     # Tests for promotions endpoint
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
@@ -199,13 +224,38 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | Endpoint | Description |
 | --- | --- |
 | `GET /api/pizzas` | List all pizzas |
-| `GET /api/crust-types` | List crust types |
 | `GET /api/orders` | List all orders |
 | `GET /api/stats` | Get store statistics |
+| `GET /api/crust/getCrusts` | List all crust types |
+| `POST /api/crust/add` | Add a new crust type |
+| `PUT /api/crust/update/{id}` | Update a crust type (returns 400 if path id ≠ body id) |
+| `DELETE /api/crust/delete/{id}` | Delete a crust type |
+| `GET /api/pizzaSize/getPizzaSizes` | List all pizza sizes |
+| `POST /api/pizzaSize/add` | Add a new pizza size |
+| `PUT /api/pizzaSize/update/{id}` | Update a pizza size (returns 400 if path id ≠ body id) |
+| `DELETE /api/pizzaSize/delete/{id}` | Delete a pizza size |
+| `GET /api/productCategory/getProductCategories` | List all product categories |
+| `POST /api/productCategory/add` | Add a new product category |
+| `PUT /api/productCategory/update/{id}` | Update a product category (returns 400 if path id ≠ body id) |
+| `DELETE /api/productCategory/delete/{id}` | Delete a product category |
+| `GET /api/product/getProducts` | List all products |
+| `POST /api/product/add` | Add a new product |
+| `PUT /api/product/update/{id}` | Update a product (returns 400 if path id ≠ body id) |
+| `DELETE /api/product/delete/{id}` | Delete a product |
+| `GET /api/topping/getToppings` | List all toppings |
+| `POST /api/topping/add` | Add a new topping |
+| `PUT /api/topping/update/{id}` | Update a topping (returns 400 if path id ≠ body id) |
+| `DELETE /api/topping/delete/{id}` | Delete a topping |
+| `GET /api/promotions` | List all promotions |
+| `POST /api/promotions` | Add a new promotion |
+| `PUT /api/promotions/{id}` | Update a promotion |
+| `DELETE /api/promotions/{id}` | Delete a promotion |
+| `GET /api/user` | Get the current user's profile |
+| `PUT /api/user` | Update user profile and address |
+| `POST /api/auth/logout` | Log out the current user |
 | `GET /api/restaurant-info` | Get restaurant name, address, and phone number |
+| `GET /api/restaurant-info/promotions` | List active promotions (public-facing) |
 | `GET /api/restaurant-hours` | Get restaurant hours (list of display lines) |
-| `GET /api/promotions` | Get active promotions |
-| `GET /api/profile` | Get customer profile |
 | `GET /api/cart` | Get shopping cart items and total |
 | `GET /api/checkout/summary` | Get order summary with subtotal, tax, and total |
 | `GET /api/reports` | Get store performance reports |
@@ -234,7 +284,7 @@ mvnw.cmd test
 This compiles the code and runs all tests. You will see output like:
 
 ```
-Tests run: 30, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 90, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 

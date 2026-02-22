@@ -8,6 +8,6 @@ export class PromotionService {
   private http = inject(HttpClient);
 
   getPromotions(): Observable<Promotion[]> {
-    return this.http.get<Promotion[]>('/api/promotions');
+    return this.http.get<Promotion[]>('/api/restaurant-info/promotions');
   }
 }

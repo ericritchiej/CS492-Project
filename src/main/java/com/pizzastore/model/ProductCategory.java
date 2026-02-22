@@ -5,26 +5,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 
 @Entity
-@Table(name = "crust_types")
+@Table(name = "product_categories")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class CrustType {
+public class ProductCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "crust_id")
-    private Long crustId;
+    @Column(name = "category_id")
+    private Long categoryId;
 
-    @Column(name = "crust_name")
-    private String crustName;
-
-    @Column(name = "price")
-    private BigDecimal price;
+    @Column(name = "category_name")
+    private String categoryName;
 
     // getters and setters come from Lombok
 }

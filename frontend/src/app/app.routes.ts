@@ -9,6 +9,8 @@ import { Cart } from './cart/cart';
 import { Checkout } from './checkout/checkout';
 import { Reporting } from './reporting/reporting';
 import { NewAccount } from './newAccount/new-account';
+import { ManagerLogin } from './manager-login/manager-login';
+import { Promotions } from './promotions/promotions';
 
 /**
  * This file defines the "routes" for the application — the rules that determine
@@ -41,7 +43,7 @@ export const routes: Routes = [
    * displays the first component whose path matches.
    */
   // when a user comes directly to the root, redirect them to the menu page.
-  { path: '', redirectTo: '/menu', pathMatch: 'full' },
+  { path: '', redirectTo: '/restaurant-info', pathMatch: 'full' },
 
   // The main menu page showing food items available to order
   { path: 'menu', component: Menu },
@@ -50,11 +52,17 @@ export const routes: Routes = [
   { path: 'orders', component: Orders },
 
   // Admin dashboard — in a production app this route should be
-  // protected so only admin users can access it (using a Route Guard)
+  // protected so only admin users can access it
   { path: 'admin', component: Admin },
+
+  // page to update promotions
+  { path: 'promotions', component: Promotions },
 
   // The sign-in page where existing customers enter their credentials
   { path: 'login', component: Login },
+
+  // The sign-in page where employees enter their credentials
+  { path: 'manager-login', component: ManagerLogin },
 
   // Static information about the restaurant (hours, location, contact, etc.)
   { path: 'restaurant-info', component: RestaurantInfo },

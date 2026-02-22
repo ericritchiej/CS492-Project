@@ -1,37 +1,9 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { RouterLink, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../auth.service';
-
-/**
- * Describes the shape of the response from /api/auth/status.
- * "interface" is similar to "type" — both define the shape of an object.
- * This tells TypeScript what fields to expect so it can catch typos
- * and provide autocomplete when we use the data.
- */
-interface AuthStatus {
-  loggedIn: boolean;
-  message: string;
-}
-
-/**
- * Describes the shape of the response from /api/auth/register.
- * When our Spring Boot backend returns JSON after a successful registration,
- * TypeScript will expect it to match this structure exactly.
- * If the backend sends different field names, the data won't map correctly.
- */
-type RegisterResponse = {
-  message: string;
-  user: {
-    id: number;
-    email: string;
-    firstName: string;
-    lastName: string;
-    role: string;
-  };
-};
+import { AuthHttpService, AuthStatus } from '../auth-http.service';
 
 /**
  * A custom validator function that checks whether the password and
@@ -134,7 +106,7 @@ export class NewAccount implements OnInit {
    */
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    private authHttp: AuthHttpService,
     private router: Router,
     private auth: AuthService
   ) {
@@ -181,7 +153,7 @@ export class NewAccount implements OnInit {
    * the function inside runs when the backend responds with data.
    */
   ngOnInit() {
-    this.http.get<AuthStatus>('/api/auth/status').subscribe(data => {
+    this.authHttp.getStatus().subscribe(data => {
       console.log('in new Account init');
       this.authStatus.set(data);
     });
@@ -238,7 +210,7 @@ export class NewAccount implements OnInit {
      *   next  — called when the request succeeds (HTTP 2xx response)
      *   error — called when the request fails (HTTP 4xx or 5xx response)
      */
-    this.http.post<RegisterResponse>('/api/auth/register/new/customer', payload).subscribe({
+    this.authHttp.register(payload).subscribe({
       next: (res) => {
         this.isLoading.set(false);
 

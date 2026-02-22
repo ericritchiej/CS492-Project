@@ -8,23 +8,23 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "crust_types")
+@Table(name = "toppings")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class CrustType {
+public class Topping {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "crust_id")
-    private Long crustId;
+    @Column(name = "topping_id")
+    private Long toppingId;
 
-    @Column(name = "crust_name")
-    private String crustName;
+    @Column(name = "topping_name")
+    private String toppingName;
 
-    @Column(name = "price")
-    private BigDecimal price;
+    @Column(name = "extra_cost")
+    private BigDecimal extraCost;
 
     // getters and setters come from Lombok
 }

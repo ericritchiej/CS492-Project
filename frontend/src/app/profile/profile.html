@@ -2,24 +2,76 @@
   <h2>Your Profile</h2>
   <p class="subtitle">Manage your account details</p>
 
+  @if (errorMsg()) {
+    <div class="error-message">
+      {{ errorMsg() }}
+    </div>
+  }
+
   @if (profile()) {
     <div class="profile-card">
+
       <div class="profile-field">
-        <span class="field-label">Name</span>
-        <span class="field-value">{{ profile()!.name }}</span>
+        <label>Email</label>
+        <div class="read-only-field">
+          {{ profile()!.email }}
+        </div>
       </div>
-      <div class="profile-field">
-        <span class="field-label">Email</span>
-        <span class="field-value">{{ profile()!.email }}</span>
+
+      <div class="profile-grid">
+
+        <div class="profile-field">
+          <label>First Name</label>
+          <input [(ngModel)]="form.firstName" name="firstName" />
+        </div>
+
+        <div class="profile-field">
+          <label>Last Name</label>
+          <input [(ngModel)]="form.lastName" name="lastName" />
+        </div>
+
+        <div class="profile-field">
+          <label>Phone</label>
+          <input [(ngModel)]="form.phone" name="phone" />
+        </div>
+
+        <div class="profile-field">
+          <label>Address Line 1</label>
+          <input [(ngModel)]="form.address1" name="address1" />
+        </div>
+
+        <div class="profile-field">
+          <label>Address Line 2</label>
+          <input [(ngModel)]="form.address2" name="address2" />
+        </div>
+
+        <div class="profile-field">
+          <label>City</label>
+          <input [(ngModel)]="form.city" name="city" />
+        </div>
+
+        <div class="profile-field">
+          <label>State</label>
+          <input [(ngModel)]="form.state" name="state" />
+        </div>
+
+        <div class="profile-field">
+          <label>Zip</label>
+          <input [(ngModel)]="form.zip" name="zip" />
+        </div>
+
       </div>
-      <div class="profile-field">
-        <span class="field-label">Address</span>
-        <span class="field-value">{{ profile()!.address }}</span>
+
+      <div class="profile-actions">
+        <button
+          class="save-button"
+          (click)="saveProfile()"
+          [disabled]="saving()"
+        >
+          {{ saving() ? 'Saving...' : 'Save Profile' }}
+        </button>
       </div>
-      <div class="profile-field">
-        <span class="field-label">Phone</span>
-        <span class="field-value">{{ profile()!.phone }}</span>
-      </div>
+
     </div>
   }
 </div>
