@@ -18,8 +18,8 @@ export interface PizzaSize {
 }
 
 export interface ProductCategory {
-  id: number;
-  name: string;
+  categoryId: number;
+  categoryName: string;
 }
 
 export interface Product {
@@ -65,7 +65,7 @@ export class Admin implements OnInit {
   // ── ADD FORM MODELS ──
   newCrust:    Partial<CrustType>       = { crustName: '', price: undefined };
   newSize:     Partial<PizzaSize>       = { sizeName: '', price: undefined };
-  newCategory: Partial<ProductCategory> = { name: '' };
+  newCategory: Partial<ProductCategory> = { categoryName: '' };
   newProduct:  Partial<Product>         = { name: '', catId: undefined, price: undefined };
   newTopping:  Partial<Topping>         = { name: '', cost: undefined };
 
@@ -103,7 +103,7 @@ export class Admin implements OnInit {
 
   // look up the category name using the category id
   getCategoryName(catId: number): string {
-    return this.categories.find(c => c.id === catId)?.name ?? '—';
+    return this.categories.find(c => c.categoryId === catId)?.categoryName ?? '—';
   }
 
   // Show a message on the screen
@@ -298,16 +298,16 @@ export class Admin implements OnInit {
   }
 
   addProductCategory(): void {
-    const name = (this.newCategory.name ?? '').trim();
+    const name = (this.newCategory.categoryName ?? '').trim();
     if (!name) { this.showToast('Enter a category name', 'error'); return; }
 
     const body = {
-      name
+      categoryName: name
     };
 
     this.http.post<ProductCategory>('/api/productCategory/add', body).subscribe({
       next: () => {
-        this.newCategory = { name: '' };
+        this.newCategory = { categoryName: '' };
         this.showToast('Category type added!');
         this.loadProductCategories(); // refresh list from backend
       },
@@ -320,12 +320,12 @@ export class Admin implements OnInit {
 
   updateProductCategory(productCategory: ProductCategory): void {
     this.editingSection = 'categories';
-    this.editName  = productCategory.name;
+    this.editName  = productCategory.categoryName;
     this.editModalOpen = true;
 
     this.saveEditCallback = () => {
-      const updated = { ...productCategory, name: this.editName.trim() };
-      this.http.put<ProductCategory>(`/api/productCategory/update/${updated.id}`, updated).subscribe({
+      const updated = { ...productCategory, categoryName: this.editName.trim() };
+      this.http.put<ProductCategory>(`/api/productCategory/update/${updated.categoryId}`, updated).subscribe({
         next: () => {
           this.showToast('Category Updated!');
           this.loadProductCategories(); // refresh list from backend

@@ -126,13 +126,16 @@ PizzaStore/
 ├── src/main/java/
 │   └── com/pizzastore/                       # Java backend (Spring Boot)
 │       ├── PizzaStoreApplication.java        # Application entry point
-│       ├── SecurityBeans.java                # Spring Security config (BCrypt password hashing)
+│       ├── config/                           # App-wide configuration
+│       │   ├── CorsConfig.java               # CORS policy (allows frontend on port 4200)
+│       │   └── SecurityBeans.java            # Spring Security config (BCrypt password hashing)
 │       ├── model/                            # Data models (one class per database table)
 │       │   ├── User.java                     # Customer account model
 │       │   ├── Employee.java                 # Employee account model
 │       │   ├── Address.java                  # Customer address model
 │       │   ├── CrustType.java                # Pizza crust option model
 │       │   ├── PizzaSize.java                # Pizza size option model
+│       │   ├── ProductCategory.java          # Product category model
 │       │   ├── Promotion.java                # Promotional discount model
 │       │   ├── RestaurantInfo.java           # Restaurant name, address, phone, description
 │       │   ├── RestaurantHours.java          # Restaurant hours rows (one row per display line)
@@ -144,6 +147,7 @@ PizzaStore/
 │       │   ├── EmployeeRepository.java       # Employee lookup queries
 │       │   ├── CrustTypeRepository.java      # Crust type CRUD queries
 │       │   ├── PizzaSizeRepository.java      # Pizza size CRUD queries
+│       │   ├── ProductCategoryRepository.java# Product category CRUD queries
 │       │   ├── PromotionsRepository.java     # Promotions CRUD queries
 │       │   ├── RestaurantInfoRepository.java # Fetches restaurant details
 │       │   ├── RestaurantHoursRepository.java# Fetches restaurant hours rows
@@ -165,6 +169,7 @@ PizzaStore/
 │           ├── CartController.java           # Shopping cart
 │           ├── CheckoutController.java       # Checkout / order summary
 │           ├── ReportingController.java      # Store reports
+│           ├── SpaController.java            # Serves Angular's index.html for client-side routes
 │           └── GlobalExceptionHandler.java   # Catches unhandled errors and returns 500
 ├── src/main/resources/
 │   └── application.properties               # Server and database configuration
@@ -190,9 +195,9 @@ PizzaStore/
 │   │   └── UserTypeResolverTest.java        # Tests for email domain routing logic
 │   └── controller/
 │       ├── AuthControllerTest.java          # Tests for login, registration, identify
-│       ├── PizzaControllerTest.java         # Tests for menu, orders, stats endpoints
 │       ├── CrustTypeControllerTest.java     # Tests for crust type CRUD endpoints
 │       ├── PizzaSizeControllerTest.java     # Tests for pizza size CRUD endpoints
+│       ├── ProductCategoryControllerTest.java # Tests for product category CRUD endpoints
 │       ├── CheckoutControllerTest.java      # Tests for checkout summary math
 │       ├── PromotionControllerTest.java     # Tests for promotions endpoint
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
@@ -272,7 +277,7 @@ mvnw.cmd test
 This compiles the code and runs all tests. You will see output like:
 
 ```
-Tests run: 51, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 62, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
