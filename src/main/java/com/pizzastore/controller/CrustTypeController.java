@@ -19,7 +19,6 @@ public class CrustTypeController {
 
     public CrustTypeController(CrustTypeRepository  crustTypeRepository) {
        this.crustTypeRepository = crustTypeRepository;
-
     }
 
     @GetMapping("/getCrusts")
@@ -48,7 +47,7 @@ public class CrustTypeController {
         return ResponseEntity.noContent().build();
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<CrustType> updateCrust(@PathVariable Long id, @RequestBody CrustType crust) {
+    public ResponseEntity<Void> updateCrust(@PathVariable Long id, @RequestBody CrustType crust) {
         logger.info("Updating pizza crust id={}, body={}", id, crust);
 
         if (!id.equals(crust.getCrustId())) {

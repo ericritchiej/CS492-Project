@@ -86,7 +86,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Size Name</label>
-            <input type="text" [(ngModel)]="newSize.name" placeholder="e.g. Large">
+            <input type="text" [(ngModel)]="newSize.sizeName" placeholder="e.g. Large">
           </div>
           <div class="form-group" style="max-width:130px">
             <label>Price ($)</label>
@@ -100,15 +100,15 @@
         <tr><th>#</th><th>Name</th><th>Price</th><th style="text-align:right">Actions</th></tr>
         </thead>
         <tbody>
-          @for (size of sizes; track size.id; let i = $index) {
+          @for (size of sizes; track size.sizeId; let i = $index) {
             <tr>
               <td style="color:var(--gray-400);font-size:0.82rem">{{ i + 1 }}</td>
-              <td><strong>{{ size.name }}</strong></td>
+              <td><strong>{{ size.sizeName }}</strong></td>
               <td class="price-cell">{{ formatPrice(size.price) }}</td>
               <td class="actions">
                 <div class="actions-inner">
                   <button class="btn btn-icon btn-edit" (click)="updatePizzaSize(size)">✏️</button>
-                  <button class="btn btn-icon btn-danger" (click)="deletePizzaSize(size.id)">🗑️</button>
+                  <button class="btn btn-icon btn-danger" (click)="deletePizzaSize(size.sizeId)">🗑️</button>
                 </div>
               </td>
             </tr>

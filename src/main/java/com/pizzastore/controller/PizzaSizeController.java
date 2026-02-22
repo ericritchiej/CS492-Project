@@ -1,12 +1,13 @@
 package com.pizzastore.controller;
 
+import com.pizzastore.model.PizzaSize;
+import com.pizzastore.repository.PizzaSizeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pizzaSize")
@@ -14,39 +15,47 @@ public class PizzaSizeController {
 
     private static final Logger logger = LoggerFactory.getLogger(PizzaSizeController.class);
 
+    private final PizzaSizeRepository pizzaSizeRepository;
 
-    public PizzaSizeController() { }
+    public PizzaSizeController(PizzaSizeRepository pizzaSizeRepository) {
+        this.pizzaSizeRepository = pizzaSizeRepository;
+    }
 
     @GetMapping("/getPizzaSizes")
-    public ResponseEntity<List<Map<String, Object>>> getPizzaSizes() {
+    public ResponseEntity<List<PizzaSize>> getPizzaSizes() {
         logger.info("Fetching all pizza sizes");
 
-        // TODO: Replace with call to PizzaSizeRepository
+        List<PizzaSize> pizzaSizes = pizzaSizeRepository.findAll();
 
-        return ResponseEntity.ok(List.of(
-                Map.of("id", 1, "name", "Small Stub",  "price", 1.00),
-                Map.of("id", 2, "name", "Medium Stub", "price", 2.00),
-                Map.of("id", 3, "name", "Large Stub",   "price", 2.99)
-        ));
+        return ResponseEntity.ok(pizzaSizes);
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addPizzaSize(@RequestBody Map<String, Object> pizzaSize) {
-        logger.info("Adding pizza size{}", pizzaSize.toString());
-        // TODO: save to database
-        return ResponseEntity.ok(pizzaSize);
+    public ResponseEntity<Void> addPizzaSize(@RequestBody PizzaSize pizzaSize) {
+        logger.info("Adding pizza size{}", pizzaSize);
+
+        pizzaSizeRepository.insertNewPizzaSize(pizzaSize);
+
+        return ResponseEntity.noContent().build();
     }
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Map<String, Object>> deletePizzaSize(@PathVariable int id) {
+    public ResponseEntity<Void> deletePizzaSize(@PathVariable Long id) {
         logger.info("Deleting pizza size {}", id);
-        // TODO: delete from database
-        return ResponseEntity.ok().build();
+
+        pizzaSizeRepository.deletePizzaSize(id);
+
+        return ResponseEntity.noContent().build();
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<Map<String, Object>> updatePizzaSize(@PathVariable int id, @RequestBody Map<String, Object> pizzaSize) {
+    public ResponseEntity<Void> updatePizzaSize(@PathVariable Long id, @RequestBody PizzaSize pizzaSize) {
         logger.info("Updating pizza size id={}, body={}", id, pizzaSize);
 
-        // TODO: update database
-        return ResponseEntity.ok(pizzaSize);
+        if (!id.equals(pizzaSize.getSizeId())) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        pizzaSizeRepository.updatePizzaSize(pizzaSize);
+
+        return ResponseEntity.noContent().build();
     }
 }

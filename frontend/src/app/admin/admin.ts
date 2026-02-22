@@ -12,8 +12,8 @@ interface CrustType {
 }
 
 export interface PizzaSize {
-  id: number;
-  name: string;
+  sizeId: number;
+  sizeName: string;
   price: number;
 }
 
@@ -64,7 +64,7 @@ export class Admin implements OnInit {
 
   // ── ADD FORM MODELS ──
   newCrust:    Partial<CrustType>       = { crustName: '', price: undefined };
-  newSize:     Partial<PizzaSize>       = { name: '', price: undefined };
+  newSize:     Partial<PizzaSize>       = { sizeName: '', price: undefined };
   newCategory: Partial<ProductCategory> = { name: '' };
   newProduct:  Partial<Product>         = { name: '', catId: undefined, price: undefined };
   newTopping:  Partial<Topping>         = { name: '', cost: undefined };
@@ -228,17 +228,17 @@ export class Admin implements OnInit {
   }
 
   addPizzaSize(): void {
-    const name = (this.newSize.name ?? '').trim();
+    const name = (this.newSize.sizeName ?? '').trim();
     if (!name) { this.showToast('Enter a pizza size name', 'error'); return; }
 
     const body = {
-      name,
+      sizeName: name,
       price: this.newSize.price ?? 0
     };
 
     this.http.post<PizzaSize>('/api/pizzaSize/add', body).subscribe({
       next: () => {
-        this.newSize = { name: '', price: undefined };
+        this.newSize = { sizeName: '', price: undefined };
         this.showToast('Pizza size added!');
         this.loadPizzaSize(); // refresh list from backend
       },
@@ -250,13 +250,13 @@ export class Admin implements OnInit {
   }
 
   updatePizzaSize(size: PizzaSize): void {
-    this.editName  = size.name;
+    this.editName  = size.sizeName;
     this.editPrice = size.price;
     this.editModalOpen = true;
 
     this.saveEditCallback = () => {
-      const updated = { ...size, name: this.editName.trim(), price: this.editPrice };
-      this.http.put<PizzaSize>(`/api/pizzaSize/update/${updated.id}`, updated).subscribe({
+      const updated = { ...size, sizeName: this.editName.trim(), price: this.editPrice };
+      this.http.put<PizzaSize>(`/api/pizzaSize/update/${updated.sizeId}`, updated).subscribe({
         next: () => {
           this.showToast('Pizza Size Updated!');
           this.loadPizzaSize(); // refresh list from backend

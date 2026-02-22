@@ -32,11 +32,6 @@ public class CrustTypeRepository {
         dsl.insertInto(DSL.table("crust_types"))
                 .set(DSL.field("crust_name"), crust.getCrustName())
                 .set(DSL.field("price"), crust.getPrice())
-                .returning(
-                        DSL.field("crust_id"),
-                        DSL.field("crust_name"),
-                        DSL.field("price")
-                )
                 .execute();
     }
 
@@ -53,11 +48,6 @@ public class CrustTypeRepository {
                 .set(DSL.field("crust_name"), crust.getCrustName())
                 .set(DSL.field("price"), crust.getPrice())
                 .where(DSL.field("crust_id").eq(crust.getCrustId()))
-                .returning(
-                        DSL.field("crust_id"),
-                        DSL.field("crust_name"),
-                        DSL.field("price")
-                )
                 .execute();
     }
 }
