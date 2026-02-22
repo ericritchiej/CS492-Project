@@ -2,115 +2,76 @@
   <h2>Your Profile</h2>
   <p class="subtitle">Manage your account details</p>
 
-    <form class="profile-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  @if (errorMsg()) {
+    <div class="error-message">
+      {{ errorMsg() }}
+    </div>
+  }
 
-      <!-- ===================== PERSONAL INFO SECTION ===================== -->
-      <div class="form-section">
-        <h3 class="section-title">Personal Info</h3>
+  @if (profile()) {
+    <div class="profile-card">
 
-        <div class="field-row">
-          <label>
-            First Name
-            <input type="text" formControlName="firstName" placeholder="Jane">
-          </label>
-          <label>
-            Last Name
-            <input type="text" formControlName="lastName" placeholder="Smith">
-          </label>
-        </div>
-
-        <label>
-          Email Address
-          <!--
-            type="email" tells the browser this is an email field.
-            On mobile it shows an optimized keyboard with @ and .com keys.
-            The browser may also do basic email format validation, though
-            Angular's Validators.email in profile.ts handles this more reliably.
-          -->
-          <input type="email" formControlName="email" placeholder="jane@example.com">
-        </label>
-
-        <label>
-          Phone Number
-          <input type="tel" formControlName="phone" placeholder="(555) 555-5555"/>
-        </label>
-
-        @if (form.get('phone')?.invalid && form.get('phone')?.touched) {
-          @if (form.get('phone')?.errors?.['required']) {
-            <span class="field-error">Phone number is required.</span>
-          }
-          @if (form.get('phone')?.errors?.['pattern']) {
-            <!--
-              'pattern' error means the value didn't match the regex defined
-              in profile.ts: /^\+?[\d\s\-\(\)]{7,15}$/
-              This allows formats like (555) 555-5555 or +1-555-555-5555
-            -->
-            <span class="field-error">Please enter a valid phone number.</span>
-          }
-        }
-      </div>
-
-      <!-- ===================== ADDRESS SECTION ===================== -->
-      <div class="form-section">
-        <h3 class="section-title">Address</h3>
-
-        <label>
-          Street Address
-          <input type="text" formControlName="address1" placeholder="123 Main St">
-        </label>
-
-        <label>
-          <!--
-            "(optional)" in the label lets the user know they don't have to
-            fill this in. The address2 field has no Validators.required in
-            profile.ts, so the form will be valid even if left blank.
-          -->
-          Apartment, suite, etc. (optional)
-          <input type="text" formControlName="address2" placeholder="Apt 4B">
-        </label>
-
-        <div class="field-row">
-          <label class="grow">
-            City
-            <input type="text" formControlName="city" placeholder="Chicago">
-          </label>
-          <label class="shrink">
-            State
-            <input type="text" formControlName="state" placeholder="IL" maxlength="2">
-          </label>
-          <label class="shrink">
-            Zip Code
-            <input type="text" formControlName="zip" placeholder="60601" maxlength="5">
-          </label>
+      <div class="profile-field">
+        <label>Email</label>
+        <div class="read-only-field">
+          {{ profile()!.email }}
         </div>
       </div>
-      <!-- ===================== FEEDBACK MESSAGES ===================== -->
 
-      <!--
-        errorMessage() and successMessage() are signals defined in profile.ts.
-        The () is required to read a signal's value — without it you'd get
-        the signal object itself, not the text inside it.
+      <div class="profile-grid">
 
-        errorMessage is set when the backend returns an error (e.g. "Email already exists").
-        successMessage is available if we ever want to show a success message before
-        redirecting — currently we navigate immediately on success without showing one.
-      -->
-      @if (errorMessage()) {
-        <p class="status-message">{{ errorMessage() }}</p>
-      }
-      @if (successMessage()) {
-        <p class="success-message">{{ successMessage() }}</p>
-      }
+        <div class="profile-field">
+          <label>First Name</label>
+          <input [(ngModel)]="form.firstName" name="firstName" />
+        </div>
 
-      <!-- ===================== BUTTONS ===================== -->
-      <div class="button-row">
-        <button type="submit" [disabled]="isLoading()">
-          {{ isLoading() ? 'Updating Profile....' : 'Update Profile' }}
+        <div class="profile-field">
+          <label>Last Name</label>
+          <input [(ngModel)]="form.lastName" name="lastName" />
+        </div>
+
+        <div class="profile-field">
+          <label>Phone</label>
+          <input [(ngModel)]="form.phone" name="phone" />
+        </div>
+
+        <div class="profile-field">
+          <label>Address Line 1</label>
+          <input [(ngModel)]="form.address1" name="address1" />
+        </div>
+
+        <div class="profile-field">
+          <label>Address Line 2</label>
+          <input [(ngModel)]="form.address2" name="address2" />
+        </div>
+
+        <div class="profile-field">
+          <label>City</label>
+          <input [(ngModel)]="form.city" name="city" />
+        </div>
+
+        <div class="profile-field">
+          <label>State</label>
+          <input [(ngModel)]="form.state" name="state" />
+        </div>
+
+        <div class="profile-field">
+          <label>Zip</label>
+          <input [(ngModel)]="form.zip" name="zip" />
+        </div>
+
+      </div>
+
+      <div class="profile-actions">
+        <button
+          class="save-button"
+          (click)="saveProfile()"
+          [disabled]="saving()"
+        >
+          {{ saving() ? 'Saving...' : 'Save Profile' }}
         </button>
-
-        <button type="button" (click)="onCancel()">Cancel</button>
       </div>
 
-    </form>
-  </div>
-
+    </div>
+  }
+</div>

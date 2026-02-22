@@ -8,67 +8,90 @@
   margin-bottom: 1.5rem;
 }
 
-.status-message {
-  color: #e65100;
-  margin-bottom: 1rem;
-}
-
-.profile-form {
+.profile-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 600px;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Layout grid for editable fields */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
   max-width: 400px;
 }
 
-.profile-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-weight: 500;
+.profile-field label {
+  font-size: 0.8rem;
+  color: #666;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
-.profile-form input {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
+.profile-field input {
+  padding: 0.5rem 0.6rem;
   border-radius: 6px;
-  font-size: 1rem;
-}
-
-.profile-form button {
-  padding: 0.625rem 1.25rem;
-  background-color: #d32f2f;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.profile-form button:hover {
-  background-color: #b71c1c;
-}
-
-.error {
-  margin: 12px 0;
-  padding: 10px 12px;
-  border: 1px solid #d32f2f;
-  border-radius: 6px;
-  background: #fdecea;
-  color: #b71c1c;
+  border: 1px solid #ccc;
   font-size: 0.95rem;
-}
-.field-error {
-  color: #d9534f; /* A standard red error color */
-  font-size: 0.85rem;
-  margin-top: 4px;
-  display: block;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-input.ng-invalid.ng-touched {
-  border: 1px solid #d9534f; /* Highlights the box red when invalid */
+.profile-field input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.15);
 }
 
-.success-message {
-  color: #2e7d32;
-  margin-bottom: 1rem;
+/* Email read-only display */
+.read-only-field {
+  padding: 0.5rem 0.6rem;
+  background: #f5f5f5;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+/* Save button area */
+.profile-actions {
+  margin-top: 0.5rem;
+}
+
+.save-button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  background-color: #1976d2;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.05s ease;
+}
+
+.save-button:hover {
+  background-color: #155fa0;
+}
+
+.save-button:active {
+  transform: scale(0.98);
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error message styling */
+.error-message {
+  background-color: #ffe5e5;
+  color: #b00020;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
 }
