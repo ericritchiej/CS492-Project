@@ -201,6 +201,9 @@ PizzaStore/
 │       ├── PizzaSizeControllerTest.java     # Tests for pizza size CRUD endpoints
 │       ├── ProductCategoryControllerTest.java # Tests for product category CRUD endpoints
 │       ├── ProductControllerTest.java       # Tests for product CRUD endpoints
+│       ├── ToppingControllerTest.java       # Tests for topping CRUD endpoints
+│       ├── ProfileControllerTest.java       # Tests for customer profile endpoint
+│       ├── UserControllerTest.java          # Tests for user info and demographics endpoints
 │       ├── CheckoutControllerTest.java      # Tests for checkout summary math
 │       ├── PromotionControllerTest.java     # Tests for promotions endpoint
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
@@ -241,7 +244,7 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | `DELETE /api/product/delete/{id}` | Delete a product |
 | `GET /api/topping/getToppings` | List all toppings |
 | `POST /api/topping/add` | Add a new topping |
-| `PUT /api/topping/update/{id}` | Update a topping |
+| `PUT /api/topping/update/{id}` | Update a topping (returns 400 if path id ≠ body id) |
 | `DELETE /api/topping/delete/{id}` | Delete a topping |
 | `GET /api/promotions` | List all promotions |
 | `POST /api/promotions` | Add a new promotion |
@@ -250,6 +253,7 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | `GET /api/user/getUser` | Get the current user's profile |
 | `POST /api/user/updateDemographics` | Update user demographic information |
 | `GET /api/restaurant-info` | Get restaurant name, address, and phone number |
+| `GET /api/restaurant-info/promotions` | List active promotions (public-facing) |
 | `GET /api/restaurant-hours` | Get restaurant hours (list of display lines) |
 | `GET /api/profile` | Get customer profile |
 | `GET /api/cart` | Get shopping cart items and total |
@@ -280,7 +284,7 @@ mvnw.cmd test
 This compiles the code and runs all tests. You will see output like:
 
 ```
-Tests run: 73, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 90, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 

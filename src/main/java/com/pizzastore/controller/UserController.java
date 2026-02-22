@@ -43,7 +43,7 @@ public class UserController {
         logger.info("Fetching users data");
 
         // TODO: Replace with call to retrieve address and user info
-        RegisterRequest repsonse = new RegisterRequest(
+        RegisterRequest response = new RegisterRequest(
                 "John",
                 "Doe",
                 "555-1234",
@@ -55,7 +55,7 @@ public class UserController {
                 "john.doe@example.com"
         );
 
-        return ResponseEntity.ok(repsonse);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/updateDemographics")

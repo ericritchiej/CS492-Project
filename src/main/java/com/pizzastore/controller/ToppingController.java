@@ -1,12 +1,13 @@
 package com.pizzastore.controller;
 
+import com.pizzastore.model.Topping;
+import com.pizzastore.repository.ToppingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/topping")
@@ -14,39 +15,48 @@ public class ToppingController {
 
     private static final Logger logger = LoggerFactory.getLogger(ToppingController.class);
 
+    private final ToppingRepository toppingRepository;
 
-    public ToppingController() { }
+    public ToppingController(ToppingRepository  toppingRepository) {
+        this.toppingRepository = toppingRepository;
+    }
 
     @GetMapping("/getToppings")
-    public ResponseEntity<List<Map<String, Object>>> getToppings() {
+    public ResponseEntity<List<Topping>> getToppings() {
         logger.info("Fetching all toppings");
 
-        // TODO: Replace with call to ToppingRepository
+        List<Topping> toppings = toppingRepository.findAll();
 
-        return ResponseEntity.ok(List.of(
-                Map.of("id", 1, "name", "Pepperoni Stub",  "cost", 1.00),
-                Map.of("id", 2, "name", "Extra Cheese Stub", "cost", 2.00),
-                Map.of("id", 3, "name", "Onions Stub",   "cost", 2.99)
-        ));
+        return ResponseEntity.ok(toppings);
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addItem(@RequestBody Map<String, Object> topping) {
-        logger.info("Adding topping {}", topping.toString());
-        // TODO: save to database
-        return ResponseEntity.ok(topping);
+    public ResponseEntity<Void> addItem(@RequestBody Topping topping) {
+        logger.info("Adding topping {}", topping);
+
+        toppingRepository.insertNewTopping(topping);
+
+        return ResponseEntity.noContent().build();
     }
+
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Map<String, Object>> deleteItem(@PathVariable int id) {
+    public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
         logger.info("Deleting topping {}", id);
-        // TODO: delete from database
-        return ResponseEntity.ok().build();
+
+        toppingRepository.deleteTopping(id);
+
+        return ResponseEntity.noContent().build();
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<Map<String, Object>> updateItem(@PathVariable int id, @RequestBody Map<String, Object> topping) {
+    public ResponseEntity<Void> updateItem(@PathVariable Long id, @RequestBody Topping topping) {
         logger.info("Updating topping id={}, body={}", id, topping);
 
-        // TODO: update database
-        return ResponseEntity.ok(topping);
+        if (!id.equals(topping.getToppingId())) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        toppingRepository.updateTopping(topping);
+
+        return ResponseEntity.noContent().build();
     }
 }

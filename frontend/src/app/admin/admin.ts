@@ -31,9 +31,9 @@ export interface Product {
 }
 
 export interface Topping {
-  id: number;
-  name: string;
-  cost: number;
+  toppingId: number;
+  toppingName: string;
+  extraCost: number;
 }
 
 export type SectionKey = 'crust' | 'sizes' | 'categories' | 'products' | 'toppings';
@@ -68,7 +68,7 @@ export class Admin implements OnInit {
   newSize:     Partial<PizzaSize>       = { sizeName: '', price: undefined };
   newCategory: Partial<ProductCategory> = { categoryName: '' };
   newProduct:  Partial<Product>         = { productName: '', categoryId: undefined, basePrice: undefined, customizable: false };
-  newTopping:  Partial<Topping>         = { name: '', cost: undefined };
+  newTopping:  Partial<Topping>         = { toppingName: '', extraCost: undefined };
 
   // ── EDIT MODAL ──
   editModalOpen = false;
@@ -443,17 +443,17 @@ export class Admin implements OnInit {
   }
 
   addTopping(): void {
-    const name = (this.newTopping.name ?? '').trim();
+    const name = (this.newTopping.toppingName ?? '').trim();
     if (!name) { this.showToast('Enter a topping name', 'error'); return; }
 
     const body = {
-      name,
-      cost: this.newTopping.cost ?? 0
+      toppingName: name,
+      extraCost: this.newTopping.extraCost ?? 0
     };
 
     this.http.post<Topping>('/api/topping/add', body).subscribe({
       next: () => {
-        this.newTopping = { name: '', cost: undefined };
+        this.newTopping = { toppingName: '', extraCost: undefined };
         this.showToast('Topping added!');
         this.loadTopping(); // refresh list from backend
       },
@@ -466,13 +466,13 @@ export class Admin implements OnInit {
 
   updateTopping(topping: Topping): void {
     this.editingSection = 'toppings';
-    this.editName  = topping.name;
-    this.editPrice = topping.cost;
+    this.editName  = topping.toppingName;
+    this.editPrice = topping.extraCost;
     this.editModalOpen = true;
 
     this.saveEditCallback = () => {
-      const updated = { ...topping, name: this.editName.trim(), cost: this.editPrice };
-      this.http.put<Topping>(`/api/topping/update/${updated.id}`, updated).subscribe({
+      const updated = { ...topping, toppingName: this.editName.trim(), extraCost: this.editPrice };
+      this.http.put<Topping>(`/api/topping/update/${updated.toppingId}`, updated).subscribe({
         next: () => {
           this.showToast('Topping Updated!');
           this.loadTopping();
