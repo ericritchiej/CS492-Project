@@ -23,10 +23,11 @@ export interface ProductCategory {
 }
 
 export interface Product {
-  id: number;
-  name: string;
-  catId: number;
-  price: number;
+  productId: number;
+  productName: string;
+  categoryId: number;
+  basePrice: number;
+  customizable: boolean;
 }
 
 export interface Topping {
@@ -66,7 +67,7 @@ export class Admin implements OnInit {
   newCrust:    Partial<CrustType>       = { crustName: '', price: undefined };
   newSize:     Partial<PizzaSize>       = { sizeName: '', price: undefined };
   newCategory: Partial<ProductCategory> = { categoryName: '' };
-  newProduct:  Partial<Product>         = { name: '', catId: undefined, price: undefined };
+  newProduct:  Partial<Product>         = { productName: '', categoryId: undefined, basePrice: undefined, customizable: false };
   newTopping:  Partial<Topping>         = { name: '', cost: undefined };
 
   // ── EDIT MODAL ──
@@ -74,8 +75,9 @@ export class Admin implements OnInit {
   editName  = '';
   editPrice = 0;
   editCatId = 0;
+  editCustomizable = false;
   saveEditCallback: (() => void) | null = null;
-  editingSection: SectionKey | null = null;  // ← add here
+  editingSection: SectionKey | null = null;
 
   // ── TOAST ──
   toastMessage = '';
@@ -366,18 +368,20 @@ export class Admin implements OnInit {
   }
 
   addProduct(): void {
-    const name = (this.newProduct.name ?? '').trim();
+    const name = (this.newProduct.productName ?? '').trim();
     if (!name) { this.showToast('Enter a product name', 'error'); return; }
+    if (!this.newProduct.categoryId) { this.showToast('Select a category', 'error'); return; }
 
     const body = {
-      name,
-      catId: this.newProduct.catId,
-      price: this.newProduct.price ?? 0
+      productName: name,
+      categoryId: this.newProduct.categoryId,
+      basePrice: this.newProduct.basePrice ?? 0,
+      customizable: this.newProduct.customizable ?? false
     };
 
     this.http.post<Product>('/api/product/add', body).subscribe({
       next: () => {
-        this.newProduct = { id: 0, name: '', catId: undefined, price: undefined };
+        this.newProduct = { productId: 0, productName: '', categoryId: undefined, basePrice: undefined, customizable: false };
         this.showToast('Product added!');
         this.loadProducts(); // refresh list from backend
       },
@@ -390,14 +394,15 @@ export class Admin implements OnInit {
 
   updateProduct(product: Product): void {
     this.editingSection = 'products';
-    this.editName  = product.name;
-    this.editPrice = product.price;
-    this.editCatId = product.catId;
+    this.editName  = product.productName;
+    this.editPrice = product.basePrice;
+    this.editCatId = product.categoryId;
+    this.editCustomizable = product.customizable;
     this.editModalOpen = true;
 
     this.saveEditCallback = () => {
-      const updated = { ...product, name: this.editName.trim(), catId: this.editCatId, price: this.editPrice };
-      this.http.put<Product>(`/api/product/update/${updated.id}`, updated).subscribe({
+      const updated = { ...product, productName: this.editName.trim(), categoryId: this.editCatId, basePrice: this.editPrice, customizable: this.editCustomizable };
+      this.http.put<Product>(`/api/product/update/${updated.productId}`, updated).subscribe({
         next: () => {
           this.showToast('Product Updated!');
           this.loadProducts(); // refresh list from backend

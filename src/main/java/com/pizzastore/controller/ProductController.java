@@ -1,12 +1,13 @@
 package com.pizzastore.controller;
 
+import com.pizzastore.model.Product;
+import com.pizzastore.repository.ProductRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/product")
@@ -14,39 +15,49 @@ public class ProductController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
 
+    private final ProductRepository productRepository;
 
-    public ProductController() { }
+    public ProductController(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
 
     @GetMapping("/getProducts")
-    public ResponseEntity<List<Map<String, Object>>> getProducts() {
+    public ResponseEntity<List<Product>> getProducts() {
         logger.info("Fetching all products");
 
-        // TODO: Replace with call to ProductRepository
+        List<Product> products = productRepository.findAll();
 
-        return ResponseEntity.ok(List.of(
-                Map.of("id", 1, "name", "Soda Stub",  "catId", 1, "price", 1.00),
-                Map.of("id", 2, "name", "Brownie Stub",  "catId", 2, "price", 2.00),
-                Map.of("id", 3, "name", "Breadstick Stub",  "catId", 3, "price", 5.88)
-        ));
+        return ResponseEntity.ok(products);
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addProduct(@RequestBody Map<String, Object> product) {
-        logger.info("Adding product {}", product.toString());
-        // TODO: save to database
-        return ResponseEntity.ok(product);
+    public ResponseEntity<Void> addProduct(@RequestBody Product product) {
+        logger.info("Adding product {}", product);
+
+        productRepository.insertNewProduct(product);
+
+        return ResponseEntity.noContent().build();
     }
+
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Map<String, Object>> deleteProduct(@PathVariable int id) {
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         logger.info("Deleting product {}", id);
-        // TODO: delete from database
-        return ResponseEntity.ok().build();
+
+        productRepository.deleteProduct(id);
+
+        return ResponseEntity.noContent().build();
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<Map<String, Object>> updateProduct(@PathVariable int id, @RequestBody Map<String, Object> product) {
+    public ResponseEntity<Void> updateProduct(@PathVariable Long id, @RequestBody Product product) {
         logger.info("Updating product id={}, body={}", id, product);
 
-        // TODO: update database
-        return ResponseEntity.ok(product);
+        if (!id.equals(product.getProductId())) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        productRepository.updateProduct(product);
+
+        return ResponseEntity.noContent().build();
     }
+
 }

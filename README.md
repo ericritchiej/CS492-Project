@@ -136,6 +136,7 @@ PizzaStore/
 │       │   ├── CrustType.java                # Pizza crust option model
 │       │   ├── PizzaSize.java                # Pizza size option model
 │       │   ├── ProductCategory.java          # Product category model
+│       │   ├── Product.java                  # Menu product model
 │       │   ├── Promotion.java                # Promotional discount model
 │       │   ├── RestaurantInfo.java           # Restaurant name, address, phone, description
 │       │   ├── RestaurantHours.java          # Restaurant hours rows (one row per display line)
@@ -148,6 +149,7 @@ PizzaStore/
 │       │   ├── CrustTypeRepository.java      # Crust type CRUD queries
 │       │   ├── PizzaSizeRepository.java      # Pizza size CRUD queries
 │       │   ├── ProductCategoryRepository.java# Product category CRUD queries
+│       │   ├── ProductRepository.java        # Product CRUD queries
 │       │   ├── PromotionsRepository.java     # Promotions CRUD queries
 │       │   ├── RestaurantInfoRepository.java # Fetches restaurant details
 │       │   ├── RestaurantHoursRepository.java# Fetches restaurant hours rows
@@ -183,7 +185,7 @@ PizzaStore/
 │       ├── orders/                          # Previous Orders page
 │       ├── admin/                           # Admin dashboard (crust, size, category, product, topping CRUD)
 │       ├── login/                           # Login page
-│       ├── new-account/                     # New Account page
+│       ├── newAccount/                      # New Account page
 │       ├── restaurant-info/                 # Restaurant Info page
 │       ├── profile/                         # Customer Profile page
 │       ├── promotions/                      # Promotions management page
@@ -198,6 +200,7 @@ PizzaStore/
 │       ├── CrustTypeControllerTest.java     # Tests for crust type CRUD endpoints
 │       ├── PizzaSizeControllerTest.java     # Tests for pizza size CRUD endpoints
 │       ├── ProductCategoryControllerTest.java # Tests for product category CRUD endpoints
+│       ├── ProductControllerTest.java       # Tests for product CRUD endpoints
 │       ├── CheckoutControllerTest.java      # Tests for checkout summary math
 │       ├── PromotionControllerTest.java     # Tests for promotions endpoint
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
@@ -230,11 +233,11 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | `DELETE /api/pizzaSize/delete/{id}` | Delete a pizza size |
 | `GET /api/productCategory/getProductCategories` | List all product categories |
 | `POST /api/productCategory/add` | Add a new product category |
-| `PUT /api/productCategory/update/{id}` | Update a product category |
+| `PUT /api/productCategory/update/{id}` | Update a product category (returns 400 if path id ≠ body id) |
 | `DELETE /api/productCategory/delete/{id}` | Delete a product category |
 | `GET /api/product/getProducts` | List all products |
 | `POST /api/product/add` | Add a new product |
-| `PUT /api/product/update/{id}` | Update a product |
+| `PUT /api/product/update/{id}` | Update a product (returns 400 if path id ≠ body id) |
 | `DELETE /api/product/delete/{id}` | Delete a product |
 | `GET /api/topping/getToppings` | List all toppings |
 | `POST /api/topping/add` | Add a new topping |
@@ -277,7 +280,7 @@ mvnw.cmd test
 This compiles the code and runs all tests. You will see output like:
 
 ```
-Tests run: 62, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 73, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 

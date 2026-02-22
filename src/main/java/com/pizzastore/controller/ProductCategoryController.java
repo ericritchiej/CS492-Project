@@ -38,6 +38,7 @@ public class ProductCategoryController {
 
         return ResponseEntity.noContent().build();
     }
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteProductCategory(@PathVariable Long id) {
         logger.info("Deleting product category {}", id);
@@ -46,6 +47,7 @@ public class ProductCategoryController {
 
         return ResponseEntity.noContent().build();
     }
+
     @PutMapping("/update/{id}")
     public ResponseEntity<Void> updateProductCategory(@PathVariable Long id, @RequestBody ProductCategory productCategory) {
         logger.info("Updating product category id={}, body={}", id, productCategory);
