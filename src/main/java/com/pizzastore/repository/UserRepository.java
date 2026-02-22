@@ -30,12 +30,12 @@ public class UserRepository {
 
         return dsl.select(
                         // Alias to Java field names for jOOQ -> POJO mapping
-                        DSL.field("customer_id").as("id"),
-                        DSL.field("email").as("email"),
-                        DSL.field("first_name").as("firstName"),
-                        DSL.field("last_name").as("lastName"),
-                        DSL.field("phone_number").as("phoneNumber"),
-                        DSL.field("password_hash").as("password")
+                        DSL.field("customer_id"),
+                        DSL.field("email"),
+                        DSL.field("first_name"),
+                        DSL.field("last_name"),
+                        DSL.field("phone_number"),
+                        DSL.field("password_hash")
                 )
                 .from(DSL.table("customers"))
                 .where(DSL.field("email").eq(username))
@@ -87,11 +87,11 @@ public class UserRepository {
         logger.info("Finding customer by id {}", id);
 
         return dsl.select(
-                        DSL.field("customer_id").as("id"),
-                        DSL.field("email").as("email"),
-                        DSL.field("first_name").as("firstName"),
-                        DSL.field("last_name").as("lastName"),
-                        DSL.field("phone_number").as("phoneNumber")
+                        DSL.field("customer_id"),
+                        DSL.field("email"),
+                        DSL.field("first_name"),
+                        DSL.field("last_name"),
+                        DSL.field("phone_number")
                 )
                 .from(DSL.table("customers"))
                 .where(DSL.field("customer_id").eq(id))
@@ -106,11 +106,11 @@ public class UserRepository {
         logger.info("Finding address for customerId {}", customerId);
 
         return dsl.select(
-                        DSL.field("street_addr_1").as("address1"),
-                        DSL.field("street_addr_2").as("address2"),
-                        DSL.field("city").as("city"),
-                        DSL.field("state").as("state"),
-                        DSL.field("zip_code").as("zip")
+                        DSL.field("street_addr_1"),
+                        DSL.field("street_addr_2"),
+                        DSL.field("city"),
+                        DSL.field("state"),
+                        DSL.field("zip_code")
                 )
                 .from(DSL.table("addresses"))
                 .where(DSL.field("customer_id").eq(customerId))

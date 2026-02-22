@@ -87,7 +87,7 @@ export class Login implements OnInit {
       : this.authHttp.signInCustomer(username, password);
     request$.subscribe({
       next: (res) => {
-        this.auth.setUser(res.user);
+
         void this.router.navigate(['/menu']);
       },
       error: (err) => {

@@ -9,6 +9,7 @@ import { Cart } from './cart/cart';
 import { Checkout } from './checkout/checkout';
 import { Reporting } from './reporting/reporting';
 import { NewAccount } from './newAccount/new-account';
+import { ManagerLogin } from './manager-login/manager-login';
 import { Promotions } from './promotions/promotions';
 
 /**
@@ -59,6 +60,9 @@ export const routes: Routes = [
 
   // The sign-in page where existing customers enter their credentials
   { path: 'login', component: Login },
+
+  // The sign-in page where employees enter their credentials
+  { path: 'manager-login', component: ManagerLogin },
 
   // Static information about the restaurant (hours, location, contact, etc.)
   { path: 'restaurant-info', component: RestaurantInfo },

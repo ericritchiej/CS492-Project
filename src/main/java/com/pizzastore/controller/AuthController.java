@@ -71,7 +71,7 @@ public class AuthController {
         Object role = session.getAttribute("role");
         Object email = session.getAttribute("email");
 
-        boolean loggedIn = (userId != null && role != null);
+        boolean loggedIn = (userId != null);
 
         status.put("loggedIn", loggedIn);
 
@@ -130,22 +130,23 @@ public class AuthController {
         if (users != null && !users.isEmpty()) {
             User user = users.get(0);
             logger.info("Found user: {}", username);
+            logger.info("User: {}", user);
 
             if (passwordEncoder.matches(password, user.getPassword())) {
-                logger.info("Password Match");
+                    logger.info("Password Match");
 
-                session.setAttribute("userId", user.getId());
-                session.setAttribute("role", "Customer");
-                session.setAttribute("email", user.getEmail());
+                    session.setAttribute("userId", user.getId());
+                    session.setAttribute("role", "Customer");
+                    session.setAttribute("email", user.getEmail());
 
-                return ResponseEntity.ok(buildUserResponse(
-                        "Login successful",
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        "Customer"
-                ));
+                    return ResponseEntity.ok(buildUserResponse(
+                            "Login successful",
+                            user.getId(),
+                            user.getEmail(),
+                            user.getFirstName(),
+                            user.getLastName(),
+                            "Customer"
+                    ));
             }
         }
 

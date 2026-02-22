@@ -43,6 +43,9 @@ public class UserController {
             return ResponseEntity.status(401).body(Map.of("message", "Not authenticated"));
         }
 
+        if (!(userIdObj instanceof Number)) {
+            return ResponseEntity.status(401).body(Map.of("message", "Not authenticated"));
+        }
         long userId = ((Number) userIdObj).longValue();
 
         User user = userRepository.findCustomerById(userId);

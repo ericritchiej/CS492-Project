@@ -48,3 +48,4 @@ logs/
 *.log
 *.log.*
 C:/logs/
+/.claude/

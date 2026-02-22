@@ -71,8 +71,11 @@ export class Profile implements OnInit {
           this.form.state = data.address?.state ?? '';
           this.form.zip = data.address?.zip ?? '';
         },
-        error: () => {
-          this.errorMsg.set('Unable to load profile. Please log in.');
+        error: (err: any) => {
+          console.error('Failed to fetch user:', err);
+          this.saving.set(false);
+          if (err.status === 401) setTimeout(() => this.router.navigate(['/login']), 2000);
+          else this.errorMsg.set('Unable to load profile. Please try again.');
         }
       });
   }
@@ -81,13 +84,14 @@ export class Profile implements OnInit {
     this.saving.set(true);
     this.errorMsg.set(null);
 
-    this.http.put('/api/user', this.form, { withCredentials: true })
+    this.http.put<{ message: string }>('/api/user', this.form, { withCredentials: true })
       .subscribe({
         next: () => {
           this.saving.set(false);
           this.router.navigate(['/menu'], { queryParams: { saved: '1' } });
         },
-        error: () => {
+        error: (err) => {
+          console.error('Failed to update profile:', err);
           this.saving.set(false);
           this.errorMsg.set('Failed to update profile.');
         }
