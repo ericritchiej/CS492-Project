@@ -103,7 +103,7 @@ You will be redirected to the **Restaurant Info** page by default. After logging
   - **Previous Orders** — View order history and delivery status
   - **Profile** — View customer profile details
   - **Login** — Sign-in page with username/password fields and form validation
-  - **New Account** — Create a new account with personal info, address, email, and password
+  - **Manager Login** — Employee/manager sign-in page
   - **Admin** — Store dashboard with daily stats (links to Reporting)
 - **Shopping Cart** (cart icon) — View cart items and total
   - Links to the **Order Confirmation & Payment** page (Checkout)
@@ -167,7 +167,6 @@ PizzaStore/
 │           ├── RestaurantInfoController.java # Restaurant details endpoint
 │           ├── RestaurantHoursController.java# Restaurant hours endpoint
 │           ├── PromotionController.java      # Promotions read endpoint (public-facing)
-│           ├── ProfileController.java        # Customer profile
 │           ├── CartController.java           # Shopping cart
 │           ├── CheckoutController.java       # Checkout / order summary
 │           ├── ReportingController.java      # Store reports
@@ -181,10 +180,12 @@ PizzaStore/
 │       ├── app.ts, app.html, app.css        # Root component with nav bar
 │       ├── app.routes.ts                    # Route definitions
 │       ├── auth.service.ts                  # Shared auth state (logged-in user)
+│       ├── auth-http.service.ts             # HTTP calls for auth endpoints
 │       ├── menu/                            # Menu page
 │       ├── orders/                          # Previous Orders page
 │       ├── admin/                           # Admin dashboard (crust, size, category, product, topping CRUD)
 │       ├── login/                           # Login page
+│       ├── manager-login/                   # Manager/employee login page
 │       ├── newAccount/                      # New Account page
 │       ├── restaurant-info/                 # Restaurant Info page
 │       ├── profile/                         # Customer Profile page
@@ -202,8 +203,7 @@ PizzaStore/
 │       ├── ProductCategoryControllerTest.java # Tests for product category CRUD endpoints
 │       ├── ProductControllerTest.java       # Tests for product CRUD endpoints
 │       ├── ToppingControllerTest.java       # Tests for topping CRUD endpoints
-│       ├── ProfileControllerTest.java       # Tests for customer profile endpoint
-│       ├── UserControllerTest.java          # Tests for user info and demographics endpoints
+│       ├── UserControllerTest.java          # Tests for user profile GET and PUT endpoints
 │       ├── CheckoutControllerTest.java      # Tests for checkout summary math
 │       ├── PromotionControllerTest.java     # Tests for promotions endpoint
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
@@ -250,12 +250,12 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | `POST /api/promotions` | Add a new promotion |
 | `PUT /api/promotions/{id}` | Update a promotion |
 | `DELETE /api/promotions/{id}` | Delete a promotion |
-| `GET /api/user/getUser` | Get the current user's profile |
-| `POST /api/user/updateDemographics` | Update user demographic information |
+| `GET /api/user` | Get the current user's profile |
+| `PUT /api/user` | Update user profile and address |
+| `POST /api/auth/logout` | Log out the current user |
 | `GET /api/restaurant-info` | Get restaurant name, address, and phone number |
 | `GET /api/restaurant-info/promotions` | List active promotions (public-facing) |
 | `GET /api/restaurant-hours` | Get restaurant hours (list of display lines) |
-| `GET /api/profile` | Get customer profile |
 | `GET /api/cart` | Get shopping cart items and total |
 | `GET /api/checkout/summary` | Get order summary with subtotal, tax, and total |
 | `GET /api/reports` | Get store performance reports |
