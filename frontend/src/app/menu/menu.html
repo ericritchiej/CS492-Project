@@ -1,4 +1,9 @@
 <div class="menu-page">
+  @if (successMessage()) {
+    <div class="success-banner">
+      {{ successMessage() }}
+    </div>
+  }
   <h2>Our Menu</h2>
   <p class="subtitle">Browse our selection of crust types</p>
 
