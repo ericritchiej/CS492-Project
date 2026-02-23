@@ -80,9 +80,35 @@ export class Profile implements OnInit {
       });
   }
 
+  private validateForm(): string | null {
+    if (!this.form.firstName.trim()) return 'First name is required.';
+    if (!this.form.lastName.trim()) return 'Last name is required.';
+
+    const phoneDigits = this.form.phone.replace(/\D/g, '');
+    if (!this.form.phone.trim()) return 'Phone number is required.';
+    if (phoneDigits.length !== 10) return 'Phone number must be 10 digits.';
+
+    if (!this.form.address1.trim()) return 'Address Line 1 is required.';
+    if (!this.form.city.trim()) return 'City is required.';
+    if (!this.form.state.trim()) return 'State is required.';
+
+    const zipPattern = /^\d{5}$/;
+    if (!this.form.zip.trim()) return 'Zip code is required.';
+    if (!zipPattern.test(this.form.zip.trim())) return 'Zip code must be exactly 5 digits.';
+
+    return null;
+  }
+
   saveProfile() {
-    this.saving.set(true);
     this.errorMsg.set(null);
+
+    const validationError = this.validateForm();
+    if (validationError) {
+      this.errorMsg.set(validationError);
+      return;
+    }
+
+    this.saving.set(true);
 
     this.http.put<{ message: string }>('/api/user', this.form, { withCredentials: true })
       .subscribe({
