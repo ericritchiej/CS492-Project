@@ -1,18 +1,245 @@
-<div class="menu-page">
-  @if (successMessage()) {
-    <div class="success-banner">
-      {{ successMessage() }}
-    </div>
-  }
-  <h2>Our Menu</h2>
-  <p class="subtitle">Browse our selection of crust types</p>
+<div class="main-wrapper">
 
-  <div class="menu-grid">
-    @for (crust of crustTypes(); track crust.crustId) {
-      <div class="menu-item">
-        <h3>{{ crust.crustName }}</h3>
-        <span class="price">{{ crust.price | currency }}</span>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-card">
+      <div class="sidebar-title">Categories</div>
+      <ul class="category-nav">
+        @for (cat of categories; track cat.categoryId) {
+          <li>
+            <a (click)="scrollToCategory(cat.categoryId)">
+              {{ cat.categoryName }}
+              <span class="cat-count">{{ productsForCategory(cat.categoryId).length }}</span>
+            </a>
+          </li>
+        }
+        <li>
+          <a (click)="openCustomModal()">✏️ Build Your Own</a>
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- MENU CONTENT -->
+  <div>
+
+    @if (loading()) {
+      <p class="state-msg">Loading menu…</p>
+    }
+    @if (loadError()) {
+      <p class="state-msg error">{{ loadError() }}</p>
+    }
+
+    <!-- Per-category sections -->
+    @for (cat of categories; track cat.categoryId) {
+      <div class="section-block" [id]="'category-' + cat.categoryId">
+
+        <div class="section-header">
+          <h2>{{ cat.categoryName }}</h2>
+          <span class="section-count">{{ productsForCategory(cat.categoryId).length }} products</span>
+        </div>
+
+        <div class="product-grid">
+          @for (product of productsForCategory(cat.categoryId); track product.productId) {
+            <div class="product-card" (click)="openModal(product)">
+              <div class="product-body">
+                <div class="product-name">{{ product.productName }}</div>
+                <div class="product-footer">
+                  <div class="product-price">
+                    <span class="product-price-from">from</span>
+                    ${{ product.basePrice | number:'1.2-2' }}
+                  </div>
+                  <button class="add-btn"
+                          (click)="$event.stopPropagation(); openModal(product)"
+                          [attr.aria-label]="'Add ' + product.productName + ' to cart'">+</button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
       </div>
     }
+
+    <!-- Build Your Own card -->
+    <div class="section-block">
+      <div class="section-header"><h2>Build Your Own</h2></div>
+      <div class="product-grid">
+        <div class="product-card" (click)="openCustomModal()">
+          <div class="product-body">
+            <div class="product-name">Custom Pizza</div>
+            <div class="product-footer">
+              <div class="product-price">
+                <span class="product-price-from">from</span>$11.99
+              </div>
+              <button class="add-btn"
+                      (click)="$event.stopPropagation(); openCustomModal()"
+                      aria-label="Build a custom pizza">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+
+
+<!-- ==========================================================
+     CUSTOMISER MODAL
+     ========================================================== -->
+@if (modalOpen) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()"
+         role="dialog" aria-modal="true"
+         [attr.aria-label]="modalproductName + ' customiser'">
+      <div class="modal-body">
+
+        <!-- Header -->
+        <div class="modal-header">
+          <h3 class="modal-title">{{ modalproductName }}</h3>
+          <button class="modal-close" (click)="closeModal()" aria-label="Close">✕</button>
+        </div>
+
+        <!-- SIZE (SCRUM-46) -->
+        <div class="config-section">
+          <div class="config-label">Size</div>
+          <div class="option-pills">
+            @if (sizes().length === 0) {
+              <span class="option-pill loading">Loading sizes…</span>
+            }
+            @for (size of sizes(); track size.sizeId) {
+              <button class="option-pill"
+                      [class.selected]="selectedSizeId() === size.sizeId"
+                      (click)="selectSize(size.sizeId)">
+                {{ size.sizeName }}@if (size.price > 0) { <span>(+${{ size.price }})</span> }
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- CRUST -->
+        <div class="config-section">
+          <div class="config-label">Crust</div>
+          <div class="option-pills">
+            @if (crustTypes().length === 0) {
+              <span class="option-pill loading">Loading crusts…</span>
+            }
+            @for (crust of crustTypes(); track crust.crustId) {
+              <button class="option-pill"
+                      [class.selected]="selectedCrustId() === crust.crustId"
+                      (click)="selectCrust(crust.crustId)">
+                {{ crust.crustName }}@if (crust.price > 0) { <span>(+${{ crust.price }})</span> }
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- SAUCE (SCRUM-47) -->
+        <div class="config-section">
+          <div class="config-label">Sauce Amount</div>
+          <div class="sauce-labels">
+            <span>Light</span><span>Regular</span><span>Heavy</span>
+          </div>
+          <input type="range" min="1" max="3" step="1"
+                 [ngModel]="sauceLevel()"
+                 (ngModelChange)="sauceLevel.set($event)"
+                 aria-label="Sauce amount" />
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- TOPPINGS (SCRUM-49 + SCRUM-50) -->
+        <div class="config-section">
+          <div class="config-label">
+            Toppings
+            @if (isCustom()) {
+              <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--crimson)">
+                &nbsp;* required
+              </span>
+            }
+          </div>
+
+          <!-- Half-pizza toggle (SCRUM-50) -->
+          <div class="half-toggle-row">
+            <input type="checkbox" id="halfToggle"
+                   [checked]="halfPizzaMode()"
+                   (change)="toggleHalfPizza()" />
+            <label for="halfToggle">Customise each half separately</label>
+          </div>
+
+          <!-- Whole-pizza toppings -->
+          @if (!halfPizzaMode()) {
+            <div class="topping-grid">
+              @for (top of toppings(); track top.toppingId) {
+                <div class="topping-product"
+                     [class.checked]="isToppingSelected(top.toppingId)"
+                     (click)="toggleTopping(top.toppingId)">
+                  <div class="topping-cb">{{ isToppingSelected(top.toppingId) ? '✓' : '' }}</div>
+                  {{ top.toppingName }}
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Half-pizza columns (SCRUM-50) -->
+          @if (halfPizzaMode()) {
+            <div class="half-cols">
+              <div>
+                <div class="half-col-label">Left Half</div>
+                <div class="topping-grid" style="grid-template-columns:1fr;">
+                  @for (top of toppings(); track top.toppingId) {
+                    <div class="topping-product"
+                         [class.checked]="isLeftToppingSelected(top.toppingId)"
+                         (click)="toggleLeftTopping(top.toppingId)">
+                      <div class="topping-cb">{{ isLeftToppingSelected(top.toppingId) ? '✓' : '' }}</div>
+                      {{ top.toppingName }}
+                    </div>
+                  }
+                </div>
+              </div>
+              <div>
+                <div class="half-col-label">Right Half</div>
+                <div class="topping-grid" style="grid-template-columns:1fr;">
+                  @for (top of toppings(); track top.toppingId) {
+                    <div class="topping-product"
+                         [class.checked]="isRightToppingSelected(top.toppingId)"
+                         (click)="toggleRightTopping(top.toppingId)">
+                      <div class="topping-cb">{{ isRightToppingSelected(top.toppingId) ? '✓' : '' }}</div>
+                      {{ top.toppingName }}
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- API error -->
+        @if (modalError()) {
+          <div class="api-error" role="alert">{{ modalError() }}</div>
+        }
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <div class="qty-control">
+            <button class="qty-btn" (click)="decrementQty()"
+                    [disabled]="quantity() <= 1" aria-label="Decrease quantity">−</button>
+            <span class="qty-num" aria-live="polite">{{ quantity() }}</span>
+            <button class="qty-btn" (click)="incrementQty()"
+                    [disabled]="quantity() >= 99" aria-label="Increase quantity">+</button>
+          </div>
+
+          <button class="add-to-cart-btn" (click)="addToCart()" [disabled]="addingToCart()">
+            @if (addingToCart()) {
+              <span>Adding…</span>
+            } @else {
+              <span>🛒 Add to Cart · ${{ modalPrice }}</span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
