@@ -381,32 +381,43 @@ input[type='range'] {
 .topping-item:hover        { border-color: var(--crimson); }
 .topping-item.checked      { border-color: var(--crimson); background: var(--badge-bg); color: var(--crimson); font-weight: 500; }
 
-.topping-cb {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--border);
+.topping-product {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
   border-radius: 4px;
+}
+
+.topping-cb {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border: 2px solid #ccc;
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  flex-shrink: 0;
-  transition: all 0.15s;
+  font-size: 0.75rem;
 }
-.topping-item.checked .topping-cb {
-  background: var(--crimson);
-  border-color: var(--crimson);
-  color: #fff;
+.topping-product.checked .topping-cb {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: white;
 }
 
 /* half-pizza toggle */
 .half-toggle-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.8rem;
-  font-size: 0.88rem;
-  color: var(--charcoal);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.75rem;
+  background: #f5f5f5;
+  border-radius: 6px;
+  border-bottom: none;
 }
 
 .half-cols {
@@ -513,3 +524,66 @@ input[type='range'] {
 .product-card:nth-child(4) { animation-delay: 0.20s; }
 .product-card:nth-child(5) { animation-delay: 0.25s; }
 .product-card:nth-child(6) { animation-delay: 0.30s; }
+
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: #2e7d32;
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 9999;
+  animation: fadeInUp 0.2s ease;
+}
+
+.toast.toast-error {
+  background: #c62828;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  border-radius: 50px;
+  overflow: hidden;
+  border: 2px solid #c0392b;
+}
+
+.qty-stepper .qty-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #c0392b;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-stepper .qty-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.qty-stepper .qty-btn:not(:disabled):hover {
+  background: #a93226;
+}
+
+.qty-stepper .qty-value {
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0 4px;
+  background: white;
+  color: #333;
+}

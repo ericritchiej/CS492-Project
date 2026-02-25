@@ -1,9 +1,8 @@
-import {Component, OnInit, signal} from '@angular/core';
+import { Component, NgZone, OnInit, signal } from '@angular/core';
 import { CommonModule }  from '@angular/common';
-import { FormsModule, ReactiveFormsModule,
-  FormBuilder, FormGroup, FormArray,
-  Validators }  from '@angular/forms';
+import { FormsModule, ReactiveFormsModule }  from '@angular/forms';
 import { HttpClient }   from '@angular/common/http';
+
 
 // ── Interfaces ──────────────────────────────────────────
 export interface Product {
@@ -38,7 +37,7 @@ export interface Topping {
 }
 
 export interface CartPayload {
-  menuproductId:      number | null;  // null for custom pizza
+  menuProductId:      number | null;  // null for custom pizza
   size:            string;
   sauce:           string;
   toppingIds:      number[];
@@ -63,24 +62,36 @@ export class Menu implements OnInit {
 
   /** All menu products returned by the API */
   products    = signal<Product[]>([]);
-  /** Available sizes (loaded from API – fallback to defaults) */
   sizes        = signal<PizzaSize[]>([]);
-  /** Available crust types */
   crustTypes   = signal<CrustType[]>([]);
-  /** Available toppings */
   toppings     = signal<Topping[]>([]);
-  /** Whether data is still loading */
   loading      = signal(true);
-  /** Top-level error (menu load failure) */
   loadError    = signal('');
 
-  // ── Derived helpers (plain getters – fully resolved by IntelliJ) ──
+  // ── Non-customizable cart quantities ─────────────────────
+  nonCustomQty = new Map<number, number>();
 
   /** Unique categories built from menu products - populated after API load */
   categories: Category[] = [];
 
   /** products keyed by categoryId - populated after API load */
   productsByCategory: Map<number, Product[]> = new Map();
+
+
+  // ── TOAST ──
+  toastMessage = signal('');
+  toastType    = signal<'success' | 'error'>('success');
+  toastVisible = signal(false);
+  private toastTimer: any;
+
+  // Show a message on the screen
+  showToast(message: string, type: 'success' | 'error' = 'success'): void {
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastVisible.set(true);
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toastVisible.set(false), 2500);
+  }
 
   /** Call this after loading menu products to populate categories and productsByCategory */
   private buildDerivedData(products: Product[]): void {
@@ -133,7 +144,7 @@ export class Menu implements OnInit {
 
   // ── Constructor ───────────────────────────────────────
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private ngZone: NgZone) {}
 
   // ── Lifecycle ─────────────────────────────────────────
 
@@ -145,15 +156,9 @@ export class Menu implements OnInit {
     this.loading.set(true);
     this.loadError.set('');
 
-    // 1. Load categories first, then products so category names are available
     this.http.get<Category[]>('/api/productCategory/getProductCategories').subscribe({
       next: cats => {
         this.categories = cats;
-        // Now load products — category names will resolve correctly
-        this.http.get<Product[]>('/api/product/getProducts').subscribe({
-          next:  products => { this.products.set(products); this.buildDerivedData(products); this.loading.set(false); },
-          error: ()       => { this.loadError.set('Unable to load menu products. Please try again.'); this.loading.set(false); },
-        });
       },
       error: () => {
         this.loadError.set('Unable to load menu categories. Please try again.');
@@ -161,52 +166,45 @@ export class Menu implements OnInit {
       },
     });
 
-    // 2. Sizes
+  this.http.get<Product[]>('/api/product/getProducts').subscribe({
+      next: products => {
+        this.products.set(products);
+        this.buildDerivedData(products);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loadError.set('Unable to load menu products. Please try again.');
+        this.loading.set(false);
+      },
+    });
+
     this.http.get<PizzaSize[]>('/api/pizzaSize/getPizzaSizes').subscribe({
       next: sizes => {
         this.sizes.set(sizes);
         if (sizes.length) this.selectedSizeId.set(sizes[1]?.sizeId ?? sizes[0].sizeId); // default Medium
       },
       error: () => {
-        // Graceful fallback
-        const fallback: PizzaSize[] = [
-          { sizeId: 1, sizeName: 'Small',  price: 0  },
-          { sizeId: 2, sizeName: 'Medium', price: 2  },
-          { sizeId: 3, sizeName: 'Large',  price: 4  },
-        ];
-        this.sizes.set(fallback);
-        this.selectedSizeId.set(2);
+        this.loadError.set('Unable to load pizza sizes. Please try again.');
+        this.loading.set(false);
       },
     });
 
-    // 3. Crust types  (SCRUM-39 – GET /api/crust-types)
     this.http.get<CrustType[]>('/api/crust/getCrusts').subscribe({
       next: crusts => {
         this.crustTypes.set(crusts);
         if (crusts.length) this.selectedCrustId.set(crusts[0].crustId);
       },
       error: () => {
-        const fallback: CrustType[] = [
-          { crustId: 1, crustName: 'Hand-Tossed', price: 0  },
-          { crustId: 2, crustName: 'Deep Dish',   price: 2  },
-          { crustId: 3, crustName: 'Thin Crust',  price: 0  },
-        ];
-        this.crustTypes.set(fallback);
-        this.selectedCrustId.set(1);
+        this.loadError.set('Unable to load crust types. Please try again.');
+        this.loading.set(false);
       },
     });
 
-    // 4. Toppings (SCRUM-43 – GET /api/toppings)
     this.http.get<Topping[]>('/api/topping/getToppings').subscribe({
       next:  tops  => this.toppings.set(tops),
       error: ()    => {
-        // Graceful fallback so custom builder still works
-        this.toppings.set([
-          {
-            toppingId: 1, toppingName: 'Sausage', extraCost: 0 },
-          { toppingId: 2, toppingName: 'Pepperoni', extraCost: 0     },
-          { toppingId: 3, toppingName: 'Canadian Bacon', extraCost: 0},
-        ]);
+        this.loadError.set('Unable to load toppings. Please try again.');
+        this.loading.set(false);
       },
     });
 
@@ -227,9 +225,13 @@ export class Menu implements OnInit {
 
   /** Open modal for a standard (named) menu product */
   openModal(product: Product): void {
-    this.selectedProduct.set(product);
-    this.isCustom.set(false);
-    this.resetModalState();
+    if (product.customizable) {
+      this.selectedProduct.set(product);
+      this.isCustom.set(false);
+      this.resetModalState();
+    } else {
+      this.addNonCustomizableToCart(product);
+    }
   }
 
   /** Open modal for the custom pizza builder */
@@ -325,14 +327,14 @@ export class Menu implements OnInit {
 
     const size = this.sizes().find(s => s.sizeId === this.selectedSizeId());
     const payload: CartPayload = {
-      menuproductId:      this.isCustom() ? null : (this.selectedProduct()?.productId ?? null),
+      menuProductId:   this.isCustom() ? null : (this.selectedProduct()?.productId ?? null),
       size:            size?.sizeName.toUpperCase() ?? 'MEDIUM',
+      crustTypeId:     this.selectedCrustId(),
       sauce:           this.sauceLabelMap[this.sauceLevel()].toUpperCase(),
       toppingIds:      this.halfPizzaMode() ? [] : Array.from(this.selectedToppingIds()),
       leftToppingIds:  this.halfPizzaMode() ? Array.from(this.leftToppingIds())  : null,
       rightToppingIds: this.halfPizzaMode() ? Array.from(this.rightToppingIds()) : null,
       quantity:        this.quantity(),
-      crustTypeId:     this.selectedCrustId(),
     };
 
     this.addingToCart.set(true);
@@ -361,4 +363,60 @@ export class Menu implements OnInit {
   get modalproductName(): string {
     return this.isCustom() ? 'Custom Pizza' : (this.selectedProduct()?.productName ?? '');
   }
+
+  /** Directly add a non-customizable product to cart (no modal needed) */
+  private addNonCustomizableToCart(product: Product): void {
+    const sizes = this.sizes();
+    const defaultSize = sizes[1] ?? sizes[0];
+    const qty = this.getNonCustomQty(product.productId);
+
+    const payload: CartPayload = {
+      menuProductId:   product.productId,
+      size:            defaultSize?.sizeName.toUpperCase() ?? 'MEDIUM',
+      crustTypeId:     this.crustTypes()[0]?.crustId ?? 0,
+      sauce:           'REGULAR',
+      toppingIds:      [],
+      leftToppingIds:  null,
+      rightToppingIds: null,
+      quantity:        qty,
+    };
+
+    this.http.post('/api/cart/add', payload).subscribe({
+      next: () => {
+        this.showToast(`${product.productName} (${qty}) added to cart!`);
+        this.nonCustomQty.set(product.productId, 0);
+      },
+      error: (err) => {
+        const current = this.getNonCustomQty(product.productId);
+        this.nonCustomQty = new Map(this.nonCustomQty);
+        current <= 1
+          ? this.nonCustomQty.delete(product.productId)
+          : this.nonCustomQty.set(product.productId, current - 1);
+        this.showToast(err?.error?.message ?? 'Failed to add to cart.', 'error');
+      },
+    });
+  }
+
+  getNonCustomQty(productId: number): number {
+    return this.nonCustomQty.get(productId) ?? 0;
+  }
+
+  incrementNonCustom(product: Product): void {
+    const current = this.getNonCustomQty(product.productId);
+    const newQty = current + 1;
+    this.nonCustomQty = new Map(this.nonCustomQty);
+    this.nonCustomQty.set(product.productId, newQty);
+  }
+
+  decrementNonCustom(product: Product): void {
+    const current = this.getNonCustomQty(product.productId);
+    this.nonCustomQty = new Map(this.nonCustomQty);
+    if (current <= 1) {
+      this.nonCustomQty.delete(product.productId);
+    } else {
+      const newQty = current - 1;
+      this.nonCustomQty.set(product.productId, newQty);
+    }
+  }
 }
+
