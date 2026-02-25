@@ -35,7 +35,8 @@
       "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" diff main...HEAD)",
       "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" log main..HEAD --oneline)",
       "Bash(git -C \"C:/Users/ericr/IdeaProjects/PizzaStore\" show --stat HEAD)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(powershell:*)"
     ]
   }
 }
