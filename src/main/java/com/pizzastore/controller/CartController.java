@@ -31,4 +31,14 @@ public class CartController {
         cartRepository.addItem(item);
         return ResponseEntity.ok("Item added to cart");
     }
+
+    @PutMapping("/update")
+    public ResponseEntity<String> updateQuantity(@RequestParam Long productId, @RequestParam int quantity) {
+        boolean updated = cartRepository.updateQuantity(productId, quantity);
+        if (updated) {
+            return ResponseEntity.ok("Quantity updated");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

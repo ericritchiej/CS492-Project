@@ -33,4 +33,20 @@ public class CartRepository {
                 .mapToDouble(i -> i.getPrice() * i.getQuantity())
                 .sum();
     }
+
+    public boolean updateQuantity(Long productId, int quantity) {
+        Optional<CartItem> existing = cartItems.stream()
+                .filter(i -> i.getProductId().equals(productId))
+                .findFirst();
+
+        if (existing.isPresent()) {
+            if (quantity <= 0) {
+                cartItems.remove(existing.get());
+            } else {
+                existing.get().setQuantity(quantity);
+            }
+            return true;
+        }
+        return false;
+    }
 }
