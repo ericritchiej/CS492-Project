@@ -1,33 +1,44 @@
 package com.pizzastore.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.pizzastore.model.CartItem;
+import com.pizzastore.repository.CartRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/cart")
 public class CartController {
 
-    @GetMapping("/cart")
+    private final CartRepository cartRepository;
+
+    public CartController(CartRepository cartRepository) {
+        this.cartRepository = cartRepository;
+    }
+
+    @GetMapping
     public Map<String, Object> getCart() {
         Map<String, Object> cart = new HashMap<>();
-        cart.put("items", Arrays.asList(
-            cartItem("Margherita", 2, 12.99),
-            cartItem("Pepperoni", 1, 14.99)
-        ));
-        cart.put("total", 40.97);
+        cart.put("items", cartRepository.findAll());
+        cart.put("total", cartRepository.getTotal());
         return cart;
     }
 
-    private Map<String, Object> cartItem(String name, int quantity, double price) {
-        Map<String, Object> item = new HashMap<>();
-        item.put("name", name);
-        item.put("quantity", quantity);
-        item.put("price", price);
-        return item;
+    @PostMapping("/add")
+    public ResponseEntity<String> addToCart(@RequestBody CartItem item) {
+        cartRepository.addItem(item);
+        return ResponseEntity.ok("Item added to cart");
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<String> updateQuantity(@RequestParam Long productId, @RequestParam int quantity) {
+        boolean updated = cartRepository.updateQuantity(productId, quantity);
+        if (updated) {
+            return ResponseEntity.ok("Quantity updated");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
