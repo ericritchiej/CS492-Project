@@ -14,14 +14,30 @@ import java.util.concurrent.atomic.AtomicLong;
 @Repository
 public class CartRepository {
 
+    private static final Logger logger = LoggerFactory.getLogger(CartRepository.class);
+
     private final List<CartItem> cartItems = new ArrayList<>();
     private final AtomicLong idSequence = new AtomicLong(1);
 
-    public List<CartItem> findAll() {
-        return cartItems;
+    private String appliedPromoCode = null;
+    private double appliedDiscount  = 0.0;
+
+    public void applyPromo(String code, double discount) {
+        this.appliedPromoCode = code;
+        this.appliedDiscount  = discount;
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(CartRepository.class);
+    public void clearPromo() {
+        this.appliedPromoCode = null;
+        this.appliedDiscount  = 0.0;
+    }
+
+    public String getAppliedPromoCode() { return appliedPromoCode; }
+    public double getAppliedDiscount()  { return appliedDiscount; }
+
+    public List<CartItem> findAll() {
+        return List.copyOf(cartItems);
+    }
 
     public CartItem addItem(CartItem newItem) {
         logger.info("Adding item to cart {}", newItem);
@@ -45,9 +61,9 @@ public class CartRepository {
     }
 
     public double getTotal() {
-        logger.info("Calculating total of cart items");
+        logger.debug("Calculating total of cart items");
         return cartItems.stream()
-                .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                .mapToDouble(i -> i.getPrice() != null ? i.getPrice() * i.getQuantity() : 0.0)
                 .sum();
     }
 

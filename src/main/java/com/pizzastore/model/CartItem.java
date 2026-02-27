@@ -12,11 +12,15 @@ public class CartItem {
     private Long productId;
     private String name;
     private Long sizeId;
-    private long crustTypeId;
+    private Long crustTypeId;
     private String sauceName;
-    private long[] toppingIdsFull;
-    private long[] toppingIdsLeft;
-    private long[] toppingIdsRight;
+    private Long[] toppingIdsFull;
+    private Long[] toppingIdsLeft;
+    private Long[] toppingIdsRight;
     private int quantity;
     private Double price;
+
+    public double getLineTotal() {
+        return price != null ? Math.round(price * quantity * 100.0) / 100.0 : 0.0;
+    }
 }

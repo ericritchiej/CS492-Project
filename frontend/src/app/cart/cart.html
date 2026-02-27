@@ -46,17 +46,23 @@
 
             <!-- Item info -->
             <div class="item-info">
-              <div class="item-name">{{ item.productName }}</div>
+              <div class="item-name">{{ item.name || 'Custom' }}</div>
               <div class="item-meta">
-                <span class="meta-pill">{{ item.size }}</span>
-                <span class="meta-pill">{{ item.crust }}</span>
-                <span class="meta-pill">{{ sauceLabel(item.sauce) }}</span>
+                @if (item.sizeId) {
+                  <span class="meta-pill">{{ sizeLabel(item.sizeId) }}</span>
+                }
+                @if (item.crustTypeId) {
+                  <span class="meta-pill">{{ crustLabel(item.crustTypeId) }}</span>
+                }
+                @if (item.sauceName) {
+                  <span class="meta-pill">{{ sauceLabel(item.sauceName!) }}</span>
+                }
               </div>
-              @if (item.leftToppings.length > 0 && item.rightToppings.length > 0) {
-                <div class="item-toppings">Left Toppings: {{ formatToppings(item.leftToppings) }}</div>
-                <div class="item-toppings">Right Toppings: {{ formatToppings(item.leftToppings) }}</div>
-              } @else if (item.leftToppings.length > 0) {
-                <div class="item-toppings">Toppings: {{ formatToppings(item.leftToppings) }}</div>
+              @if ((item.toppingIdsLeft?.length ?? 0) > 0 && (item.toppingIdsRight?.length ?? 0) > 0) {
+                <div class="item-toppings">Left Toppings: {{ formatToppingIds(item.toppingIdsLeft ?? []) }}</div>
+                <div class="item-toppings">Right Toppings: {{ formatToppingIds(item.toppingIdsRight ?? []) }}</div>
+              } @else if ((item.toppingIdsFull?.length ?? 0) > 0) {
+                <div class="item-toppings">Toppings: {{ formatToppingIds(item.toppingIdsFull ?? []) }}</div>
               }
             </div>
 
@@ -66,14 +72,14 @@
                 <button class="qty-btn"
                         (click)="decrementItem(item)"
                         [disabled]="isItemUpdating(item.cartItemId)"
-                        [attr.aria-label]="'Decrease quantity of ' + item.productName">
+                        [attr.aria-label]="'Decrease quantity of ' + item.name">
                   @if (item.quantity === 1) { 🗑 } @else { − }
                 </button>
                 <span class="qty-value">{{ item.quantity }}</span>
                 <button class="qty-btn"
                         (click)="incrementItem(item)"
                         [disabled]="item.quantity >= 99 || isItemUpdating(item.cartItemId)"
-                        [attr.aria-label]="'Increase quantity of ' + item.productName">+</button>
+                        [attr.aria-label]="'Increase quantity of ' + item.name">+</button>
               </div>
               <div class="item-price">${{ item.lineTotal | number:'1.2-2' }}</div>
             </div>

@@ -1,23 +1,28 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-// TODO: Restore HttpClient import when switching to real API calls
-// import { HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 
 // ── Interfaces ──────────────────────────────────────────
 
+export interface PizzaSize  { sizeId: number; sizeName: string; }
+export interface CrustType  { crustId: number; crustName: string; }
+export interface Toppings  { toppingId: number; toppingName: string; extraCost: number }
+
 export interface CartItemDto {
-  cartItemId:  number;
-  productName: string;
-  size:        string;
-  crust:       string;
-  sauce:       string;
-  leftToppings:  string [];
-  rightToppings: string [];
-  quantity:    number;
-  unitPrice:   number;
-  lineTotal:   number;
+  cartItemId:      number;
+  productId:       number | null;  // null for custom pizza
+  name:            string;
+  sizeId:          number | null;
+  crustTypeId:     number | null;
+  sauceName:       string | null;
+  toppingIdsFull:  number[] | null;
+  toppingIdsLeft:  number[] | null;
+  toppingIdsRight: number[] | null;
+  quantity:        number;
+  price:           number;
+  lineTotal:       number;
 }
 
 
@@ -52,6 +57,11 @@ export class Cart implements OnInit {
   promoError  = signal('');
   promoLoading = signal(false);
 
+  // Size / crust lookup / Topping
+  sizes      = signal<PizzaSize[]>([]);
+  crustTypes = signal<CrustType[]>([]);
+  toppings = signal<Toppings[]>([]);
+
   // Per-item quantity update in-flight tracking
   updatingItem = signal<Set<number>>(new Set());
 
@@ -68,105 +78,41 @@ export class Cart implements OnInit {
 
   // ── Constructor ───────────────────────────────────────
 
-  constructor(private router: Router) {}
+  constructor(private router: Router,private http: HttpClient) {}
 
   // ── Lifecycle ─────────────────────────────────────────
 
   ngOnInit(): void {
-    this.loadCart();
+    this.loadCartSummary();
+    this.http.get<PizzaSize[]>('/api/pizzaSize/getPizzaSizes').subscribe({
+      next: sizes => this.sizes.set(sizes),
+      error: () => this.showToast('Unable to load pizza sizes.', 'error'),
+    });
+    this.http.get<CrustType[]>('/api/crust/getCrusts').subscribe({
+      next: crusts => this.crustTypes.set(crusts),
+      error: () => this.showToast('Unable to load crust types.', 'error'),
+    });
+    this.http.get<Toppings[]>('/api/topping/getToppings').subscribe({
+      next: toppings => this.toppings.set(toppings),
+      error: () => this.showToast('Unable to load toppings.', 'error'),
+    });
   }
 
   // ── Data loading ──────────────────────────────────────
 
-  // TODO: Replace this mock with the real API call below once the backend is ready.
-  //
-  // loadCart(): void {
-  //   this.loading.set(true);
-  //   this.loadError.set('');
-  //   this.http.get<CartSummaryDto>('/api/cart').subscribe({
-  //     next: summary => { this.cart.set(summary); this.loading.set(false); },
-  //     error: () => { this.loadError.set('Unable to load your cart. Please try again.'); this.loading.set(false); },
-  //   });
-  // }
-
-  private readonly MOCK_CART: CartSummaryDto = {
-    items: [
-      {
-        cartItemId:  1,
-        productName: 'Pepperoni Feast',
-        size:        'LARGE',
-        crust:       'Hand Tossed',
-        sauce:       'REGULAR',
-        leftToppings:    [],
-        rightToppings:    [],
-        quantity:    2,
-        unitPrice:   14.98,
-        lineTotal:   29.96,
-      },
-      {
-        cartItemId:  2,
-        productName: 'BBQ Chicken Deluxe',
-        size:        'MEDIUM',
-        crust:       'Thin Crust',
-        sauce:       'HEAVY',
-        leftToppings:    [],
-        rightToppings:    [],
-        quantity:    1,
-        unitPrice:   13.49,
-        lineTotal:   13.49,
-      },
-      {
-        cartItemId:  3,
-        productName: 'Custom Pizza',
-        size:        'LARGE',
-        crust:       'Stuffed Crust',
-        sauce:       'LIGHT',
-        leftToppings:    ['Pepperoni, Sausage'],
-        rightToppings:   ['Spinach, Feta, Roasted Garlic'],
-        quantity:    1,
-        unitPrice:   17.99,
-        lineTotal:   17.99,
-      },
-      {
-        cartItemId:  4,
-        productName: 'Custom Pizza',
-        size:        'LARGE',
-        crust:       'Stuffed Crust',
-        sauce:       'LIGHT',
-        leftToppings:    ['Sausage, Mushroom'],
-        rightToppings:   [],
-        quantity:    1,
-        unitPrice:   15.99,
-        lineTotal:   15.99,
-      },
-      {
-        cartItemId:  5,
-        productName: 'Garlic Breadsticks',
-        size:        'MEDIUM',
-        crust:       'Original',
-        sauce:       'REGULAR',
-        leftToppings:    [],
-        rightToppings:    [],
-        quantity:    2,
-        unitPrice:   4.99,
-        lineTotal:   9.98,
-      },
-    ],
-    subtotal:  71.42,
-    discount:  0,
-    promoCode: null,
-    tax:       5.71,
-    total:     77.13,
-  };
-
-  loadCart(): void {
+  loadCartSummary(): void {
     this.loading.set(true);
     this.loadError.set('');
-    // Simulate a brief network delay so loading state is visible
-    setTimeout(() => {
-      this.cart.set(structuredClone(this.MOCK_CART));
-      this.loading.set(false);
-    }, 400);
+
+    this.http.get<CartSummaryDto>('/api/cart').subscribe({
+      next: summary => {
+        this.cart.set(summary);
+        this.loading.set(false);
+        },
+      error: () => {
+        this.loadError.set('Unable to load your cart. Please try again.');
+        this.loading.set(false); },
+    });
   }
 
   // ── Quantity controls ─────────────────────────────────
@@ -180,40 +126,24 @@ export class Cart implements OnInit {
     this.updateQuantity(item, item.quantity - 1);
   }
 
-  // TODO: Replace this mock with the real API call below once the backend is ready.
-  //
-  // private updateQuantity(item: CartItemDto, newQty: number): void {
-  //   const inFlight = new Set(this.updatingItem());
-  //   inFlight.add(item.cartItemId);
-  //   this.updatingItem.set(inFlight);
-  //   this.http.put(`/api/cart/${item.cartItemId}/quantity`, { quantity: newQty }).subscribe({
-  //     next: () => { const done = new Set(this.updatingItem()); done.delete(item.cartItemId); this.updatingItem.set(done); this.loadCart(); },
-  //     error: (err) => { const done = new Set(this.updatingItem()); done.delete(item.cartItemId); this.updatingItem.set(done); this.showToast(err?.error?.message ?? 'Failed to update quantity.', 'error'); },
-  //   });
-  // }
-
   private updateQuantity(item: CartItemDto, newQty: number): void {
-    const current = this.cart();
-    if (!current) return;
-
-    let updatedItems: CartItemDto[];
-    if (newQty <= 0) {
-      updatedItems = current.items.filter(i => i.cartItemId !== item.cartItemId);
-    } else {
-      updatedItems = current.items.map(i =>
-        i.cartItemId === item.cartItemId
-          ? { ...i, quantity: newQty, lineTotal: parseFloat((i.unitPrice * newQty).toFixed(2)) }
-          : i
-      );
-    }
-
-    const subtotal  = parseFloat(updatedItems.reduce((s, i) => s + i.lineTotal, 0).toFixed(2));
-    const discount  = current.discount;
-    const taxable   = Math.max(0, subtotal - discount);
-    const tax       = parseFloat((taxable * 0.08).toFixed(2));
-    const total     = parseFloat((taxable + tax).toFixed(2));
-
-    this.cart.set({ ...current, items: updatedItems, subtotal, tax, total });
+    const inFlight = new Set(this.updatingItem());
+    inFlight.add(item.cartItemId);
+    this.updatingItem.set(inFlight);
+    this.http.put(`/api/cart/update`, { cartItemId: item.cartItemId, quantity: newQty }).subscribe({
+      next: () => {
+        const done = new Set(this.updatingItem());
+        done.delete(item.cartItemId);
+        this.updatingItem.set(done);
+        this.loadCartSummary();
+        },
+      error: (err) => {
+        const done = new Set(this.updatingItem());
+        done.delete(item.cartItemId);
+        this.updatingItem.set(done);
+        this.showToast(err?.error?.message ?? 'Failed to update quantity.', 'error');
+        },
+    });
   }
 
   isItemUpdating(cartItemId: number): boolean {
@@ -221,67 +151,39 @@ export class Cart implements OnInit {
   }
 
   // ── Promo code ────────────────────────────────────────
-
-  // TODO: Replace this mock with the real API call below once the backend is ready.
-  //
-  // applyPromo(): void {
-  //   const code = this.promoInput().trim();
-  //   if (!code) return;
-  //   this.promoError.set('');
-  //   this.promoLoading.set(true);
-  //   this.http.post<CartSummaryDto>(`/api/cart/promo?code=${encodeURIComponent(code)}`, {}).subscribe({
-  //     next: summary => { this.cart.set(summary); this.promoLoading.set(false); this.showToast(`Promo code "${code}" applied!`); },
-  //     error: (err) => { this.promoLoading.set(false); this.promoError.set(err?.status === 404 ? 'Promo code not found.' : (err?.error?.message ?? 'Failed to apply promo code.')); },
-  //   });
-  // }
-
-  private readonly MOCK_PROMOS: Record<string, number> = {
-    'COWABUNGA10': 0.10,   // 10% off
-    'PIZZA20':     0.20,   // 20% off
-    'SAVE5':       5.00,   // $5 flat
-  };
-
   applyPromo(): void {
-    const code = this.promoInput().trim().toUpperCase();
+    const code = this.promoInput().trim();
     if (!code) return;
 
     this.promoError.set('');
     this.promoLoading.set(true);
 
-    setTimeout(() => {
-      const rate = this.MOCK_PROMOS[code];
-      if (rate === undefined) {
+    this.http.post<CartSummaryDto>(`/api/cart/promo?code=${encodeURIComponent(code)}`, {}).subscribe({
+      next: summary => {
+        this.cart.set(summary);
         this.promoLoading.set(false);
-        this.promoError.set('Promo code not found.');
-        return;
-      }
-
-      const current = this.cart();
-      if (!current) { this.promoLoading.set(false); return; }
-
-      const subtotal = current.subtotal;
-      const discount = parseFloat((rate < 1 ? subtotal * rate : rate).toFixed(2));
-      const taxable  = Math.max(0, subtotal - discount);
-      const tax      = parseFloat((taxable * 0.08).toFixed(2));
-      const total    = parseFloat((taxable + tax).toFixed(2));
-
-      this.cart.set({ ...current, discount, promoCode: code, tax, total });
-      this.promoLoading.set(false);
-      this.showToast(`Promo code "${code}" applied!`);
-    }, 400);
+        this.showToast(`Promo code "${code}" applied!`);
+      },
+      error: err => {
+        this.promoLoading.set(false);
+        this.promoError.set(err?.error?.message ?? 'Failed to apply promo code.');
+      },
+    });
   }
 
   removePromo(): void {
-    const current = this.cart();
-    if (!current) return;
-
     this.promoInput.set('');
     this.promoError.set('');
 
-    const taxable = current.subtotal;
-    const tax     = parseFloat((taxable * 0.08).toFixed(2));
-    const total   = parseFloat((taxable + tax).toFixed(2));
-    this.cart.set({ ...current, discount: 0, promoCode: null, tax, total });
+    this.http.delete<CartSummaryDto>('/api/cart/promo').subscribe({
+      next: summary => {
+        this.cart.set(summary)
+        this.showToast(`Promo code removed!`);
+      },
+      error: err => {
+        this.promoError.set(err?.error?.message ?? 'Failed to remove promo code.');
+      },
+    });
   }
 
   // ── Checkout ──────────────────────────────────────────
@@ -302,9 +204,14 @@ export class Cart implements OnInit {
   }
 
   // ── Template helpers ──────────────────────────────────
+  sizeLabel(sizeId: number | null): string {
+    if (sizeId == null) return '';
+    return this.sizes().find(s => s.sizeId === sizeId)?.sizeName ?? String(sizeId);
+  }
 
-  formatToppings(toppings: string[]): string {
-    return toppings.length ? toppings.join(', ') : 'None';
+  crustLabel(crustId: number | null): string {
+    if (crustId == null) return '';
+    return this.crustTypes().find(c => c.crustId === crustId)?.crustName ?? String(crustId);
   }
 
   sauceLabel(sauce: string): string {
@@ -313,4 +220,14 @@ export class Cart implements OnInit {
     };
     return map[sauce?.toUpperCase()] ?? sauce;
   }
+
+  toppingLabel(toppingId: number | null): string {
+    if (toppingId == null) return '';
+    return this.toppings().find(c => c.toppingId === toppingId)?.toppingName ?? String(toppingId);
+  }
+
+  formatToppingIds(ids: number[]): string {
+    return ids.length ? ids.map(id => this.toppingLabel(id)).join(', ') : 'None';
+  }
+
 }

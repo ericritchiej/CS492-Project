@@ -1,4 +1,4 @@
-import { Component, NgZone, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule }  from '@angular/common';
 import { FormsModule, ReactiveFormsModule }  from '@angular/forms';
 import { HttpClient }   from '@angular/common/http';
@@ -156,7 +156,7 @@ export class Menu implements OnInit {
 
   // ── Constructor ───────────────────────────────────────
 
-  constructor(private http: HttpClient, private ngZone: NgZone) {}
+  constructor(private http: HttpClient) {}
 
   // ── Lifecycle ─────────────────────────────────────────
 
@@ -379,8 +379,7 @@ export class Menu implements OnInit {
 
   /** Directly add a non-customizable product to cart (no modal needed) */
   private addNonCustomizableToCart(product: Product): void {
-    const sizes = this.sizes();
-    const defaultSize = sizes[1] ?? sizes[0];
+
     const qty = this.getNonCustomQty(product.productId);
 
     const payload: CartPayload = {
