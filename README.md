@@ -136,6 +136,7 @@ PizzaStore/
 │       │   ├── CrustType.java                # Pizza crust option model
 │       │   ├── PizzaSize.java                # Pizza size option model
 │       │   ├── ProductCategory.java          # Product category model
+│       │   ├── CartItem.java                 # Shopping cart item model (holds cartItemId, toppings, size, crust, price)
 │       │   ├── Product.java                  # Menu product model
 │       │   ├── Promotion.java                # Promotional discount model
 │       │   ├── RestaurantInfo.java           # Restaurant name, address, phone, description
@@ -207,7 +208,8 @@ PizzaStore/
 │       ├── CheckoutControllerTest.java      # Tests for checkout summary math
 │       ├── PromotionControllerTest.java     # Tests for promotions endpoint
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
-│       └── RestaurantHoursControllerTest.java # Tests for restaurant hours endpoint
+│       ├── RestaurantHoursControllerTest.java # Tests for restaurant hours endpoint
+│       └── CartControllerTest.java          # Tests for cart add, deduplication, and update-by-cartItemId
 ├── .env.example                             # Template for your .env file (safe to commit)
 ├── .github/workflows/ci.yml                # GitHub Actions — runs tests on push/PR
 ├── pom.xml                                  # Maven build configuration
@@ -256,7 +258,9 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | `GET /api/restaurant-info` | Get restaurant name, address, and phone number |
 | `GET /api/restaurant-info/promotions` | List active promotions (public-facing) |
 | `GET /api/restaurant-hours` | Get restaurant hours (list of display lines) |
-| `GET /api/cart` | Get shopping cart items and total |
+| `GET /api/cart` | Get cart items (each includes `cartItemId`) and running total |
+| `POST /api/cart/add` | Add item to cart; returns the saved `CartItem` as JSON including its assigned `cartItemId`. Same `productId` merges quantity; custom pizzas (`productId: null`) always create a new entry. |
+| `PUT /api/cart/update?cartItemId={id}&quantity={n}` | Update quantity for a specific cart row by `cartItemId` (use value from add response). Quantity ≤ 0 removes the item. Returns 404 if `cartItemId` not found. |
 | `GET /api/checkout/summary` | Get order summary with subtotal, tax, and total |
 | `GET /api/reports` | Get store performance reports |
 | `GET /api/auth/status` | Get current authentication status |

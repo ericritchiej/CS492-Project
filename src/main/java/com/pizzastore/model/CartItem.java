@@ -8,8 +8,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartItem {
+    private Long cartItemId;
     private Long productId;
     private String name;
+    private Long sizeId;
+    private long crustTypeId;
+    private String sauceName;
+    private long[] toppingIdsFull;
+    private long[] toppingIdsLeft;
+    private long[] toppingIdsRight;
     private int quantity;
-    private double price;
+    private Double price;
 }
