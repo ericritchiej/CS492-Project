@@ -11,6 +11,7 @@ import { Reporting } from './reporting/reporting';
 import { NewAccount } from './newAccount/new-account';
 import { ManagerLogin } from './manager-login/manager-login';
 import { Promotions } from './promotions/promotions';
+import { Payment } from './payment/payment.component';
 
 /**
  * This file defines the "routes" for the application — the rules that determine
@@ -81,4 +82,7 @@ export const routes: Routes = [
 
   // The new account registration form for first-time customers
   { path: 'new-account', component: NewAccount },
+
+  // The payment page where the customer enters payment details
+  { path: 'payment', component: Payment },
 ];
