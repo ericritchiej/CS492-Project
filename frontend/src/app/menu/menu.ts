@@ -1,4 +1,4 @@
-import { Component, NgZone, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule }  from '@angular/common';
 import { FormsModule, ReactiveFormsModule }  from '@angular/forms';
 import { HttpClient }   from '@angular/common/http';
@@ -36,15 +36,22 @@ export interface Topping {
   extraCost: number;
 }
 
+export interface CartItemResponse {
+  cartItemId: number;
+  productId:  number | null;
+}
+
 export interface CartPayload {
-  menuProductId:      number | null;  // null for custom pizza
-  size:            string;
-  sauce:           string;
-  toppingIds:      number[];
-  leftToppingIds:  number[] | null;
-  rightToppingIds: number[] | null;
+  productId:      number | null;  // null for custom pizza
+  name:            string;
+  sizeId:          number | null;
+  crustTypeId:     number | null;
+  sauceName:       string | null;
+  toppingIdsFull:  number[] | null;
+  toppingIdsLeft:  number[] | null;
+  toppingIdsRight: number[] | null;
   quantity:        number;
-  crustTypeId:     number;
+  price:           number | null;
 }
 
 // ── Component ────────────────────────────────────────────
@@ -70,6 +77,11 @@ export class Menu implements OnInit {
 
   // ── Non-customizable cart quantities ─────────────────────
   nonCustomQty = new Map<number, number>();
+
+  /** productId → cartItemId for non-custom menu items */
+  nonCustomCartItemIds = new Map<number, number>();
+  /** cartItemIds for custom / customizable modal-added pizzas */
+  modalCartItemIds: number[] = [];
 
   /** Unique categories built from menu products - populated after API load */
   categories: Category[] = [];
@@ -144,7 +156,7 @@ export class Menu implements OnInit {
 
   // ── Constructor ───────────────────────────────────────
 
-  constructor(private http: HttpClient, private ngZone: NgZone) {}
+  constructor(private http: HttpClient) {}
 
   // ── Lifecycle ─────────────────────────────────────────
 
@@ -327,24 +339,25 @@ export class Menu implements OnInit {
 
     const size = this.sizes().find(s => s.sizeId === this.selectedSizeId());
     const payload: CartPayload = {
-      menuProductId:   this.isCustom() ? null : (this.selectedProduct()?.productId ?? null),
-      size:            size?.sizeName.toUpperCase() ?? 'MEDIUM',
+      productId:       this.isCustom() ? null : (this.selectedProduct()?.productId ?? null),
+      name:            this.selectedProduct()?.productName ?? '',
+      sizeId:          size?.sizeId ?? null,
       crustTypeId:     this.selectedCrustId(),
-      sauce:           this.sauceLabelMap[this.sauceLevel()].toUpperCase(),
-      toppingIds:      this.halfPizzaMode() ? [] : Array.from(this.selectedToppingIds()),
-      leftToppingIds:  this.halfPizzaMode() ? Array.from(this.leftToppingIds())  : null,
-      rightToppingIds: this.halfPizzaMode() ? Array.from(this.rightToppingIds()) : null,
+      sauceName:       this.sauceLabelMap[this.sauceLevel()].toUpperCase(),
+      toppingIdsFull:  this.halfPizzaMode() ? null : Array.from(this.selectedToppingIds()),
+      toppingIdsLeft:  this.halfPizzaMode() ? Array.from(this.leftToppingIds())  : null,
+      toppingIdsRight: this.halfPizzaMode() ? Array.from(this.rightToppingIds()) : null,
       quantity:        this.quantity(),
+      price:           parseFloat(this.modalPrice),
     };
 
     this.addingToCart.set(true);
 
-    this.http.post('/api/cart/add', payload).subscribe({
-      next: () => {
+    this.http.post<CartItemResponse>('/api/cart/add', payload).subscribe({
+      next: (res) => {
+        this.modalCartItemIds.push(res.cartItemId);
         this.addingToCart.set(false);
         this.closeModal();
-        // If your app uses a shared cart service, emit an update here, e.g.:
-        // this.cartService.refresh();
       },
       error: (err) => {
         this.addingToCart.set(false);
@@ -366,23 +379,25 @@ export class Menu implements OnInit {
 
   /** Directly add a non-customizable product to cart (no modal needed) */
   private addNonCustomizableToCart(product: Product): void {
-    const sizes = this.sizes();
-    const defaultSize = sizes[1] ?? sizes[0];
+
     const qty = this.getNonCustomQty(product.productId);
 
     const payload: CartPayload = {
-      menuProductId:   product.productId,
-      size:            defaultSize?.sizeName.toUpperCase() ?? 'MEDIUM',
-      crustTypeId:     this.crustTypes()[0]?.crustId ?? 0,
-      sauce:           'REGULAR',
-      toppingIds:      [],
-      leftToppingIds:  null,
-      rightToppingIds: null,
+      productId:       product.productId,
+      name:            product.productName,
+      sizeId:          null,
+      crustTypeId:     null,
+      sauceName:       null,
+      toppingIdsFull:  null,
+      toppingIdsLeft:  null,
+      toppingIdsRight: null,
       quantity:        qty,
+      price:           product.basePrice,
     };
 
-    this.http.post('/api/cart/add', payload).subscribe({
-      next: () => {
+    this.http.post<CartItemResponse>('/api/cart/add', payload).subscribe({
+      next: (res) => {
+        this.nonCustomCartItemIds.set(product.productId, res.cartItemId);
         this.showToast(`${product.productName} (${qty}) added to cart!`);
         this.nonCustomQty.set(product.productId, 0);
       },
@@ -398,7 +413,7 @@ export class Menu implements OnInit {
   }
 
   getNonCustomQty(productId: number): number {
-    return this.nonCustomQty.get(productId) ?? 0;
+    return this.nonCustomQty.get(productId) ?? 1;
   }
 
   incrementNonCustom(product: Product): void {

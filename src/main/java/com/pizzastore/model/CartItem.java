@@ -8,8 +8,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartItem {
+    private Long cartItemId;
     private Long productId;
     private String name;
+    private Long sizeId;
+    private Long crustTypeId;
+    private String sauceName;
+    private Long[] toppingIdsFull;
+    private Long[] toppingIdsLeft;
+    private Long[] toppingIdsRight;
     private int quantity;
-    private double price;
+    private Double price;
+
+    public double getLineTotal() {
+        return price != null ? Math.round(price * quantity * 100.0) / 100.0 : 0.0;
+    }
 }

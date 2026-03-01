@@ -364,22 +364,7 @@ input[type='range'] {
   gap: 0.5rem;
 }
 
-.topping-item {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.7rem;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  background: #fff;
-  transition: all 0.15s;
-  color: var(--charcoal);
-  user-select: none;
-}
-.topping-item:hover        { border-color: var(--crimson); }
-.topping-item.checked      { border-color: var(--crimson); background: var(--badge-bg); color: var(--crimson); font-weight: 500; }
+.topping-product:hover        { border-color: var(--crimson); }
 
 .topping-product {
   display: flex;

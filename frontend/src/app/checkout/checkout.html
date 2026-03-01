@@ -1,34 +1,295 @@
-<div class="checkout-page">
-  <h2>Checkout</h2>
-  <p class="subtitle">Review and confirm your order</p>
+<div class="main-wrapper">
 
-  @if (summary()) {
-    <div class="order-summary">
-      <h3>Order Summary</h3>
-
-      @for (item of summary()!.items; track item.name) {
-        <div class="summary-item">
-          <span>{{ item.name }} x{{ item.quantity }}</span>
-          <span>{{ item.lineTotal | currency }}</span>
-        </div>
-      }
-
-      <div class="summary-line">
-        <span>Subtotal</span>
-        <span>{{ summary()!.subtotal | currency }}</span>
-      </div>
-      <div class="summary-line">
-        <span>Tax</span>
-        <span>{{ summary()!.tax | currency }}</span>
-      </div>
-      <div class="summary-line total-line">
-        <span>Total</span>
-        <span>{{ summary()!.total | currency }}</span>
-      </div>
-    </div>
-
-    <div class="checkout-actions">
-      <a routerLink="/cart" class="back-link">Back to Shopping Cart</a>
+  <!-- TOAST -->
+  @if (toastVisible()) {
+    <div class="toast" [class.toast-error]="toastType() === 'error'">
+      {{ toastMessage() }}
     </div>
   }
+
+  <!-- ── ORDER CONFIRMATION MODAL ── -->
+  @if (orderConfirmed()) {
+    <div class="co-modal-backdrop" (click)="onBackdropClick($event)">
+      <div class="co-modal" role="dialog" aria-modal="true" aria-labelledby="co-modal-title">
+
+        <div class="co-modal-success-ring">
+          <svg class="co-modal-check-svg" viewBox="0 0 52 52" fill="none">
+            <circle class="co-check-circle" cx="26" cy="26" r="24" stroke="#2E7D32" stroke-width="2.5"/>
+            <path class="co-check-tick" d="M14 26l9 9 15-17" stroke="#2E7D32" stroke-width="3"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <h2 class="co-modal-title" id="co-modal-title">Order Placed!</h2>
+        <p class="co-modal-subtitle">
+          Thanks for your order — we're on it. You'll be enjoying your pizza soon.
+        </p>
+
+        <div class="co-modal-order-id">
+          Order Reference&nbsp; <strong>#{{ confirmedOrderId() }}</strong>
+        </div>
+
+        <div class="co-modal-eta">
+          <span>⏱</span>
+          <span>Estimated ready in <strong>30–45 minutes</strong></span>
+        </div>
+
+        <div class="co-modal-divider"></div>
+
+        <!-- Items -->
+        <div class="co-modal-items">
+          @for (item of confirmedItems(); track item.cartItemId) {
+            <div class="co-modal-item">
+              <div class="co-modal-item-left">
+                <span class="co-modal-item-name">{{ item.name || 'Custom' }}</span>
+                <span class="co-modal-item-qty">× {{ item.quantity }}</span>
+              </div>
+              <span class="co-modal-item-price">${{ item.lineTotal | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="co-modal-divider"></div>
+
+        <!-- Totals -->
+        <div class="co-modal-totals">
+          @if (confirmedCart()?.promoCode) {
+            <div class="co-modal-total-row co-modal-promo-row">
+              <span>🎉 <strong>{{ confirmedCart()!.promoCode }}</strong> applied</span>
+              <span>−${{ confirmedCart()!.discount | number:'1.2-2' }}</span>
+            </div>
+          }
+          <div class="co-modal-total-row">
+            <span>Tax (8%)</span>
+            <span>${{ confirmedCart()!.tax | number:'1.2-2' }}</span>
+          </div>
+          <div class="co-modal-total-row co-modal-grand-total">
+            <span>Total Charged</span>
+            <span>${{ confirmedCart()!.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="co-modal-pay-note">
+          💳&nbsp; Payment collected at delivery or pickup — no charge now
+        </div>
+
+        <!-- Actions -->
+        <div class="co-modal-actions">
+          <a class="co-modal-btn-primary" routerLink="/menu" (click)="closeModal()">
+            🍕&nbsp; Back to Menu
+          </a>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <a class="back-link" routerLink="/cart">← Back to Cart</a>
+    <h1 class="page-title">Checkout</h1>
+  </div>
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <p class="state-msg">Loading your order…</p>
+  }
+
+  <!-- ERROR -->
+  @if (loadError()) {
+    <p class="state-msg error">{{ loadError() }}</p>
+  }
+
+  <!-- EMPTY CART -->
+  @if (!loading() && !loadError() && isEmpty()) {
+    <div class="empty-state">
+      <div class="empty-icon">🍕</div>
+      <h2 class="empty-title">Nothing to check out</h2>
+      <p class="empty-sub">Your cart is empty. Add some pizzas first!</p>
+      <a class="browse-btn" routerLink="/menu">Browse Menu</a>
+    </div>
+  }
+
+  <!-- CHECKOUT CONTENT -->
+  @if (!loading() && !loadError() && !isEmpty()) {
+    <div class="checkout-layout">
+
+      <!-- LEFT COLUMN -->
+      <div class="checkout-left">
+
+        <!-- ── ORDER ITEMS ── -->
+        <section class="section-card">
+          <h2 class="section-title">
+            <span class="section-icon">🍕</span>
+            Your Order
+            <span class="item-count">{{ items().length }} item{{ items().length !== 1 ? 's' : '' }}</span>
+          </h2>
+
+          <div class="order-items">
+            @for (item of items(); track item.cartItemId) {
+              <div class="order-item">
+                <div class="order-item-info">
+                  <div class="order-item-name">{{ item.name || 'Custom' }}</div>
+                  <div class="order-item-meta">
+                    @if (item.sizeId) {
+                      <span class="meta-pill">{{ sizeLabel(item.sizeId) }}</span>
+                    }
+                    @if (item.crustTypeId) {
+                      <span class="meta-pill">{{ crustLabel(item.crustTypeId) }}</span>
+                    }
+                    @if (item.sauceName) {
+                      <span class="meta-pill">{{ sauceLabel(item.sauceName!) }}</span>
+                    }
+                  </div>
+                  @if ((item.toppingIdsLeft?.length ?? 0) > 0 && (item.toppingIdsRight?.length ?? 0) > 0) {
+                    <div class="order-item-toppings">Left: {{ formatToppingIds(item.toppingIdsLeft ?? []) }}</div>
+                    <div class="order-item-toppings">Right: {{ formatToppingIds(item.toppingIdsRight ?? []) }}</div>
+                  } @else if ((item.toppingIdsFull?.length ?? 0) > 0) {
+                    <div class="order-item-toppings">Toppings: {{ formatToppingIds(item.toppingIdsFull ?? []) }}</div>
+                  }
+                </div>
+                <div class="order-item-right">
+                  <span class="order-item-qty">× {{ item.quantity }}</span>
+                  <span class="order-item-price">${{ item.lineTotal | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="order-actions">
+            <a class="action-link" routerLink="/cart">✏️ Edit Cart</a>
+            <a class="action-link" routerLink="/menu">+ Add More Items</a>
+          </div>
+        </section>
+
+        <!-- ── DELIVERY INFO ── -->
+        <section class="section-card">
+          <h2 class="section-title">
+            <span class="section-icon">📋</span>
+            Your Information
+          </h2>
+
+          @if (profile()) {
+            <div class="profile-grid">
+              <div class="profile-field">
+                <span class="field-label">Name</span>
+                <span class="field-value">{{ fullName() || '—' }}</span>
+              </div>
+              <div class="profile-field">
+                <span class="field-label">Email</span>
+                <span class="field-value">{{ profile()!.email || '—' }}</span>
+              </div>
+              <div class="profile-field">
+                <span class="field-label">Phone</span>
+                @if (profile()!.phone) {
+                  <span class="field-value">{{ profile()!.phone }}</span>
+                } @else {
+                  <span class="field-value missing">Not on file</span>
+                }
+              </div>
+              <div class="profile-field">
+                <span class="field-label">Address</span>
+                @if (fullAddress()) {
+                  <span class="field-value" style="white-space: pre-line">{{ fullAddress() }}</span>
+                } @else {
+                  <span class="field-value missing">Not on file</span>
+                }
+              </div>
+            </div>
+
+            @if (!profile()!.phone || !fullAddress()) {
+              <div class="profile-notice">
+                <span class="notice-icon">⚠️</span>
+                <span>Some contact details are missing. <a class="notice-link" routerLink="/profile">Update your profile</a> to ensure smooth delivery.</span>
+              </div>
+            } @else {
+              <div class="profile-hint">
+                Need to make changes? <a class="hint-link" routerLink="/profile">Edit your profile</a>
+              </div>
+            }
+          } @else {
+            <div class="profile-notice">
+              <span class="notice-icon">⚠️</span>
+              <span>Unable to load your profile. <a class="notice-link" routerLink="/profile">Add your contact info</a> before placing your order.</span>
+            </div>
+          }
+        </section>
+
+        <!-- ── PAYMENT INFO ── -->
+        <section class="section-card payment-card">
+          <h2 class="section-title">
+            <span class="section-icon">💳</span>
+            Payment
+          </h2>
+          <div class="payment-banner">
+            <div class="payment-icon-wrap">🤝</div>
+            <div class="payment-text">
+              <strong>Pay on Delivery or Pickup</strong>
+              <p>No payment required now. We accept cash or card when your order arrives or when you pick it up. Easy as that!</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN — ORDER SUMMARY -->
+      <div class="summary-panel">
+        <div class="summary-card">
+          <div class="summary-title">Order Summary</div>
+
+          <!-- Promo applied -->
+          @if (cart()?.promoCode) {
+            <div class="promo-applied">
+              <span>🎉 <strong>{{ cart()!.promoCode }}</strong> applied</span>
+            </div>
+            <div class="divider"></div>
+          }
+
+          <!-- Totals -->
+          <div class="totals">
+            <div class="total-row">
+              <span>Subtotal</span>
+              <span>${{ cart()!.subtotal | number:'1.2-2' }}</span>
+            </div>
+
+            @if (cart()!.discount > 0) {
+              <div class="total-row discount-row">
+                <span>Discount</span>
+                <span>−${{ cart()!.discount | number:'1.2-2' }}</span>
+              </div>
+            }
+
+            <div class="total-row">
+              <span>Tax (8%)</span>
+              <span>${{ cart()!.tax | number:'1.2-2' }}</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="total-row grand-total">
+              <span>Total</span>
+              <span>${{ cart()!.total | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <!-- Place Order -->
+          <button class="place-order-btn"
+                  (click)="placeOrder()"
+                  [disabled]="isEmpty() || placing()">
+            @if (placing()) {
+              Placing Order…
+            } @else {
+              Place Order →
+            }
+          </button>
+
+          <div class="pay-reminder">💳 Payment collected at delivery / pickup</div>
+
+          <a class="continue-link" routerLink="/cart">← Back to Cart</a>
+        </div>
+      </div>
+
+    </div>
+  }
+
 </div>

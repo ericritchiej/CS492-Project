@@ -1,88 +1,445 @@
-.cart-page h2 {
-  font-size: 1.75rem;
-  margin: 0 0 0.25rem;
+/* =========================================================
+   cart.component.css
+   Scoped styles for the Cart page (cart.component.html)
+   ========================================================= */
+
+/* ── CSS Variables (match app-wide theme) ──────────────── */
+:host {
+  --crimson:      #B22222;
+  --crimson-dark: #8B1A1A;
+  --cream:        #FDF8F3;
+  --charcoal:     #1C1C1C;
+  --muted:        #6B6B6B;
+  --border:       #EDE8E0;
+  --badge-bg:     #FFF0E8;
+  --badge-text:   #B22222;
+  --tag-bg:       #F5F0EB;
+  --green:        #2E7D32;
+  --discount:     #2E7D32;
 }
 
-.subtitle {
-  color: #666;
-  margin-bottom: 1.5rem;
+/* ── Page wrapper ──────────────────────────────────────── */
+.main-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem;
+  background: var(--cream);
+  min-height: 100vh;
 }
 
+/* ── Page header ───────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin: 0;
+}
+
+.item-count {
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 20px;
+}
+
+/* ── Two-column layout ─────────────────────────────────── */
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .cart-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Cart Item List ────────────────────────────────────── */
 .cart-items {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  max-width: 500px;
+  gap: 1rem;
 }
 
+/* ── Individual Cart Item Card ─────────────────────────── */
 .cart-item {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
+  background: #fff;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  padding: 1.2rem 1.4rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1.2rem;
+  transition: border-color 0.2s, opacity 0.2s;
+  animation: fadeInUp 0.35s ease both;
+}
+
+.cart-item.updating {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .item-info {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .item-name {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--charcoal);
+  margin-bottom: 0.45rem;
 }
 
-.item-qty {
-  color: #666;
-  font-size: 0.9rem;
+.item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.meta-pill {
+  background: var(--tag-bg);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.18rem 0.6rem;
+  border-radius: 20px;
+}
+
+.item-toppings {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+/* ── Item controls (stepper + price) ───────────────────── */
+.item-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
 .item-price {
-  font-weight: 600;
-  color: #d32f2f;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--crimson);
+  white-space: nowrap;
 }
 
-.cart-total {
+/* ── Qty Stepper ───────────────────────────────────────── */
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  border-radius: 50px;
+  overflow: hidden;
+  border: 2px solid var(--crimson);
+}
+
+.qty-stepper .qty-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: var(--crimson);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.qty-stepper .qty-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.qty-stepper .qty-btn:not(:disabled):hover {
+  background: var(--crimson-dark);
+}
+
+.qty-stepper .qty-value {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0 6px;
+  background: #fff;
+  color: var(--charcoal);
+}
+
+/* ── Order Summary Panel ───────────────────────────────── */
+.summary-panel {
+  position: sticky;
+  top: 80px;
+}
+
+.summary-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.summary-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 1.2rem;
+}
+
+/* ── Promo Code ────────────────────────────────────────── */
+.promo-section {
+  margin-bottom: 1rem;
+}
+
+.promo-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.promo-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--charcoal);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.promo-input:focus {
+  border-color: var(--crimson);
+}
+
+.promo-btn {
+  background: var(--charcoal);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.promo-btn:hover:not(:disabled) {
+  background: var(--crimson);
+}
+
+.promo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.promo-error {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--crimson);
+}
+
+.promo-applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F0FBF0;
+  border: 1px solid #A5D6A7;
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.88rem;
+  color: var(--green);
+}
+
+.promo-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.promo-remove:hover {
+  color: var(--crimson);
+}
+
+/* ── Totals ────────────────────────────────────────────── */
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.4rem;
+}
+
+.total-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  max-width: 500px;
-  margin-top: 1rem;
-  padding: 1rem 1.25rem;
-  font-size: 1.1rem;
+  font-size: 0.92rem;
+  color: var(--charcoal);
+}
+
+.discount-row {
+  color: var(--discount);
   font-weight: 600;
-  border-top: 2px solid #e0e0e0;
 }
 
-.total-value {
-  color: #d32f2f;
+.grand-total {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-top: 0.2rem;
 }
 
-.checkout-button {
-  display: inline-block;
-  margin-top: 1.5rem;
-  padding: 0.625rem 1.25rem;
-  background-color: #d32f2f;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 500;
+/* ── Divider ───────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 1rem 0;
 }
 
-.checkout-button:hover {
-  background-color: #b71c1c;
+/* ── Checkout Button ───────────────────────────────────── */
+.checkout-btn {
+  width: 100%;
+  background: var(--crimson);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 1.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: 0.01em;
 }
 
-.confirmation-link {
+.checkout-btn:hover:not(:disabled) {
+  background: var(--crimson-dark);
+}
+
+.checkout-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.continue-link {
   display: block;
-  margin-top: 1rem;
-  color: #d32f2f;
+  text-align: center;
+  margin-top: 0.9rem;
+  font-size: 0.85rem;
+  color: var(--muted);
   text-decoration: none;
-  font-weight: 500;
+  transition: color 0.15s;
 }
 
-.confirmation-link:hover {
-  text-decoration: underline;
+.continue-link:hover {
+  color: var(--crimson);
 }
+
+/* ── Empty State ───────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--charcoal);
+  margin-bottom: 0.5rem;
+}
+
+.empty-sub {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.browse-btn {
+  display: inline-block;
+  background: var(--crimson);
+  color: #fff;
+  text-decoration: none;
+  padding: 0.75rem 2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+}
+
+.browse-btn:hover {
+  background: var(--crimson-dark);
+}
+
+/* ── State messages ────────────────────────────────────── */
+.state-msg {
+  text-align: center;
+  color: var(--muted);
+  padding: 3rem 1rem;
+  font-size: 0.95rem;
+}
+
+.state-msg.error {
+  color: var(--crimson);
+}
+
+/* ── Toast ─────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--green);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  animation: fadeInUp 0.2s ease;
+}
+
+.toast.toast-error {
+  background: #c62828;
+}
+
+/* ── Animations ────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cart-item:nth-child(1) { animation-delay: 0.05s; }
+.cart-item:nth-child(2) { animation-delay: 0.10s; }
+.cart-item:nth-child(3) { animation-delay: 0.15s; }
+.cart-item:nth-child(4) { animation-delay: 0.20s; }
+.cart-item:nth-child(5) { animation-delay: 0.25s; }
+.cart-item:nth-child(6) { animation-delay: 0.30s; }
