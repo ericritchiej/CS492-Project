@@ -4,14 +4,25 @@
     <a routerLink="/menu">Menu</a>
     <a routerLink="/restaurant-info">Restaurant Info</a>
     <div class="nav-dropdown">
-      <span class="nav-dropdown-toggle">User Tools</span>
+      <span class="nav-dropdown-toggle">
+        @if (auth.user$ | async) { Account } @else { Sign In }
+      </span>
       <div class="nav-dropdown-menu">
-        <a routerLink="/orders">Previous Orders</a>
-        <a routerLink="/profile">Profile</a>
-        <a routerLink="/login">Login</a>
-        <a routerLink="/manager-login">Manager Login</a>
-        <a routerLink="/admin">Admin</a>
+        @if (auth.user$ | async; as user) {
+          @if (user.role === 'Customer') {
+            <a routerLink="/orders">Previous Orders</a>
+            <a routerLink="/profile">Profile</a>
+          }
+          @if (user.role === 'MANAGER') {
+            <a routerLink="/admin">Admin</a>
+            <a routerLink="/promotions">Promotions</a>
+          }
+        } @else {
+          <a routerLink="/login">Login</a>
+          <a routerLink="/manager-login">Manager Login</a>
+        }
       </div>
+
     </div>
     <a routerLink="/cart" class="cart-link" aria-label="Shopping Cart">
       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
