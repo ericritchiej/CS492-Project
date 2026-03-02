@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class PromotionRepository {
@@ -49,6 +50,21 @@ public class PromotionRepository {
                         .or(DSL.field("exp_dt", LocalDate.class).greaterThan(LocalDate.now()))
                 )
                 .fetchInto(Promotion.class);
+    }
+
+    public Optional<Promotion> findByCode(String code) {
+        return dsl.select(
+                        DSL.field("promotion_id"),
+                        DSL.field("code"),
+                        DSL.field("discount_value"),
+                        DSL.field("promotion_desc"),
+                        DSL.field("promotion_summary"),
+                        DSL.field("exp_dt", LocalDate.class),
+                        DSL.field("min_order_amt")
+                )
+                .from(DSL.table("promotions"))
+                .where(DSL.field("code").equalIgnoreCase(code))
+                .fetchOptionalInto(Promotion.class);
     }
 
 }
