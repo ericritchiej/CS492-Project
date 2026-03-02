@@ -182,6 +182,8 @@ PizzaStore/
 │       ├── app.routes.ts                    # Route definitions
 │       ├── auth.service.ts                  # Shared auth state (logged-in user)
 │       ├── auth-http.service.ts             # HTTP calls for auth endpoints
+│       ├── customer-login-routing.ts        # Route guard — redirects guests to /login
+│       ├── manager-login-routing.ts         # Route guard — redirects non-managers to /manager-login
 │       ├── menu/                            # Menu page
 │       ├── orders/                          # Previous Orders page
 │       ├── admin/                           # Admin dashboard (crust, size, category, product, topping CRUD)
@@ -209,7 +211,8 @@ PizzaStore/
 │       ├── PromotionControllerTest.java     # Tests for promotions endpoint
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
 │       ├── RestaurantHoursControllerTest.java # Tests for restaurant hours endpoint
-│       └── CartControllerTest.java          # Tests for cart add, deduplication, update quantity, and promo apply/remove
+│       ├── CartControllerTest.java          # Tests for cart add, deduplication, update quantity, and promo apply/remove
+│       └── PromotionsControllerTest.java    # Tests for promotions CRUD endpoints (GET, POST, PUT, DELETE)
 ├── .env.example                             # Template for your .env file (safe to commit)
 ├── .github/workflows/ci.yml                # GitHub Actions — runs tests on push/PR
 ├── pom.xml                                  # Maven build configuration
@@ -290,7 +293,7 @@ mvnw.cmd test
 This compiles the code and runs all tests. You will see output like:
 
 ```
-Tests run: 90, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 107, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
@@ -312,8 +315,8 @@ When you build the project with `mvnw.cmd package`, Maven automatically runs all
 
 The project includes a GitHub Actions workflow (`.github/workflows/ci.yml`) that runs all tests automatically whenever you:
 
-- **Push** to `main` or any `feature/` branch
-- **Open a pull request** targeting `main`
+- **Push** to any branch
+- **Open a pull request** targeting any branch
 
 You can see the results on GitHub by clicking the **Actions** tab in the repository. Pull requests will show a green checkmark or red X next to each commit indicating whether tests passed.
 
