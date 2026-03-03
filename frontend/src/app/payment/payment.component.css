@@ -10,7 +10,6 @@
   margin-top: 2rem;
 }
 
-/* Confirmation */
 .confirmation {
   text-align: center;
   padding: 3rem;
@@ -30,14 +29,12 @@
   color: #2e7d32;
 }
 
-/* Layout */
 .payment-layout {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
   gap: 2rem;
 }
 
-/* Summary Panel */
 .summary-panel {
   background: #fff;
   border-radius: 12px;
@@ -82,7 +79,6 @@
   padding-top: 0.5rem;
 }
 
-/* Payment Form */
 .payment-form {
   background: #fff;
   border-radius: 12px;
@@ -176,4 +172,9 @@
   .payment-layout {
     grid-template-columns: 1fr;
   }
+}
+
+@keyframes pizzaFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
 }
