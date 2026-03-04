@@ -221,6 +221,21 @@
             <span class="section-icon">💳</span>
             Payment
           </h2>
+
+          <!-- Delivery Method Selector -->
+          <div class="delivery-method-selector">
+            <label class="delivery-option" [class.selected]="deliveryMethod() === 'DELIVERY'"
+                   (click)="deliveryMethod.set('DELIVERY')">
+              <span class="delivery-icon">🚗</span>
+              <span>Delivery</span>
+            </label>
+            <label class="delivery-option" [class.selected]="deliveryMethod() === 'PICKUP'"
+                   (click)="deliveryMethod.set('PICKUP')">
+              <span class="delivery-icon">🏪</span>
+              <span>Pick Up</span>
+            </label>
+          </div>
+
           <div class="payment-banner">
             <div class="payment-icon-wrap">💳</div>
             <div class="payment-text">
