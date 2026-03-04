@@ -60,6 +60,16 @@ public class CartRepository {
         }
     }
 
+
+    public boolean isEmpty() {
+        return cartItems.isEmpty();
+    }
+
+    public void clearCart() {
+        cartItems.clear();
+        clearPromo();
+    }
+
     public double getTotal() {
         logger.debug("Calculating total of cart items");
         return cartItems.stream()
