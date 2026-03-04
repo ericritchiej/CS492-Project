@@ -86,5 +86,5 @@ export const routes: Routes = [
   { path: 'new-account', component: NewAccount },
 
   // The payment page where the customer enters payment details
-  { path: 'payment', component: Payment },
+  { path: 'payment', component: Payment, canActivate: [customerLoginRouting] },
 ];

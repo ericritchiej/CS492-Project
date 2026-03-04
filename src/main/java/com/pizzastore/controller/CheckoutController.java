@@ -8,6 +8,8 @@ import com.pizzastore.model.Promotion;
 import com.pizzastore.repository.CartRepository;
 import com.pizzastore.repository.OrderRepository;
 import com.pizzastore.repository.PromotionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/checkout")
 public class CheckoutController {
+
+    private static final Logger logger = LoggerFactory.getLogger(CheckoutController.class);
 
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
@@ -49,12 +53,14 @@ public class CheckoutController {
 
         Object userIdObj = session.getAttribute("userId");
         if (userIdObj == null) {
+            logger.error("not authorized to process checkout");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new OrderConfirmationDto(null, null, null, null, "Authentication required"));
         }
 
         List<CartItem> items = cartRepository.findAll();
         if (items.isEmpty()) {
+            logger.error("cart is empty");
             return ResponseEntity.badRequest()
                     .body(new OrderConfirmationDto(null, null, null, null, "Cannot checkout with an empty cart"));
         }
@@ -64,6 +70,7 @@ public class CheckoutController {
                 : request.getDeliveryMethod().trim().toUpperCase();
 
         if (!"DELIVERY".equals(deliveryMethod) && !"PICKUP".equals(deliveryMethod)) {
+            logger.error("delivery method not supported");
             return ResponseEntity.badRequest()
                     .body(new OrderConfirmationDto(null, null, null, null,
                             "deliveryMethod must be DELIVERY or PICKUP"));
@@ -72,6 +79,7 @@ public class CheckoutController {
         if ("DELIVERY".equals(deliveryMethod)) {
             String address = request.getDeliveryAddress() == null ? "" : request.getDeliveryAddress().trim();
             if (address.isEmpty()) {
+                logger.error("address is empty");
                 return ResponseEntity.badRequest()
                         .body(new OrderConfirmationDto(null, null, deliveryMethod, null,
                                 "Delivery address is required for DELIVERY"));
