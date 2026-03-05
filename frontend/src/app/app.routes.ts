@@ -11,6 +11,8 @@ import { Reporting } from './reporting/reporting';
 import { NewAccount } from './newAccount/new-account';
 import { ManagerLogin } from './manager-login/manager-login';
 import { Promotions } from './promotions/promotions';
+import { managerLoginRouting } from './manager-login-routing';
+import { customerLoginRouting } from './customer-login-routing';
 import { Payment } from './payment/payment.component';
 
 /**
@@ -50,14 +52,14 @@ export const routes: Routes = [
   { path: 'menu', component: Menu },
 
   // Order history or active orders for the logged-in customer
-  { path: 'orders', component: Orders },
+  { path: 'orders', component: Orders, canActivate: [customerLoginRouting] },
 
   // Admin dashboard — in a production app this route should be
   // protected so only admin users can access it
-  { path: 'admin', component: Admin },
+  { path: 'admin', component: Admin, canActivate: [managerLoginRouting] },
 
   // page to update promotions
-  { path: 'promotions', component: Promotions },
+  { path: 'promotions', component: Promotions, canActivate: [managerLoginRouting] },
 
   // The sign-in page where existing customers enter their credentials
   { path: 'login', component: Login },
@@ -69,20 +71,20 @@ export const routes: Routes = [
   { path: 'restaurant-info', component: RestaurantInfo },
 
   // The logged-in customer's profile page (personal info, saved addresses, etc.)
-  { path: 'profile', component: Profile },
+  { path: 'profile', component: Profile , canActivate: [customerLoginRouting] },
 
   // The shopping cart showing items the customer has added before checkout
-  { path: 'cart', component: Cart },
+  { path: 'cart', component: Cart, canActivate: [customerLoginRouting] },
 
   // The checkout flow where the customer confirms their order and pays
-  { path: 'checkout', component: Checkout },
+  { path: 'checkout', component: Checkout, canActivate: [customerLoginRouting] },
 
   // Sales and order reporting — likely admin-only in a production app
-  { path: 'reporting', component: Reporting },
+  { path: 'reporting', component: Reporting, canActivate: [managerLoginRouting] },
 
   // The new account registration form for first-time customers
   { path: 'new-account', component: NewAccount },
 
   // The payment page where the customer enters payment details
-  { path: 'payment', component: Payment },
+  { path: 'payment', component: Payment, canActivate: [customerLoginRouting] },
 ];

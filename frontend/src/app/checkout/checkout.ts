@@ -154,7 +154,12 @@ export class Checkout implements OnInit {
     // Snapshot the cart now so the modal has data even after cart clears
     const cartSnapshot = this.cart();
 
-    this.http.post<{ orderId: number }>('/api/checkout/process', {}).subscribe({
+    const body = {
+      deliveryMethod: "DELIVERY",
+      deliveryAddress: this.fullAddress(),
+    };
+
+    this.http.post<{ orderId: number }>('/api/checkout/process', body).subscribe({
       next: res => {
         this.placing.set(false);
         // Store snapshot for the modal
