@@ -46,6 +46,7 @@ export class Checkout implements OnInit {
   loading     = signal(true);
   loadError   = signal('');
   placing     = signal(false);
+  deliveryMethod = signal<'DELIVERY' | 'PICKUP'>('DELIVERY');
 
   // Lookup data
   sizes       = signal<PizzaSize[]>([]);
