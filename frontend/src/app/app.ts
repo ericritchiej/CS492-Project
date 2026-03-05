@@ -2,6 +2,7 @@ import {Component, OnInit, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
+import { CartService } from './cart.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
@@ -56,6 +57,7 @@ import { HttpClient } from '@angular/common/http';
 export class App implements OnInit {
   title = signal<string>('');
   error = signal<string | null>(null);
+  cartCount = signal<number>(0);
 
   /**
    * The constructor runs once when this component is first created.
@@ -75,7 +77,7 @@ export class App implements OnInit {
    *   "public" makes it available to the template, which is why we can write
    *   things like {{ auth.user$ | async }} directly in app.html.
    */
-  constructor(public auth: AuthService, private http: HttpClient) {}
+  constructor(public auth: AuthService, public cartService: CartService, private http: HttpClient) {}
 
 
   ngOnInit() {
@@ -89,5 +91,15 @@ export class App implements OnInit {
         console.error('Failed to fetch restaurant info:', err);
       }
     });
+
+    this.auth.user$.subscribe(user => {
+      if (user?.role === 'Customer') {
+        this.cartService.refresh();
+      } else {
+        this.cartService.setCount(0);
+      }
+    });
+
+    this.cartService.cartCount$.subscribe(count => this.cartCount.set(count));
   }
 }

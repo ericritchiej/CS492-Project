@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule }  from '@angular/common';
 import { FormsModule, ReactiveFormsModule }  from '@angular/forms';
 import { HttpClient }   from '@angular/common/http';
+import { CartService } from '../cart.service';
 
 
 // ── Interfaces ──────────────────────────────────────────
@@ -156,7 +157,7 @@ export class Menu implements OnInit {
 
   // ── Constructor ───────────────────────────────────────
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cartService: CartService) {}
 
   // ── Lifecycle ─────────────────────────────────────────
 
@@ -357,6 +358,7 @@ export class Menu implements OnInit {
       next: (res) => {
         this.modalCartItemIds.push(res.cartItemId);
         this.addingToCart.set(false);
+        this.cartService.refresh();
         this.closeModal();
       },
       error: (err) => {
@@ -400,6 +402,7 @@ export class Menu implements OnInit {
         this.nonCustomCartItemIds.set(product.productId, res.cartItemId);
         this.showToast(`${product.productName} (${qty}) added to cart!`);
         this.nonCustomQty.set(product.productId, 0);
+        this.cartService.refresh();
       },
       error: (err) => {
         const current = this.getNonCustomQty(product.productId);
