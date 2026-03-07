@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
+import { CartService } from '../cart.service';
 
 // ── Interfaces ──────────────────────────────────────────
 
@@ -78,7 +79,7 @@ export class Cart implements OnInit {
 
   // ── Constructor ───────────────────────────────────────
 
-  constructor(private router: Router,private http: HttpClient) {}
+  constructor(private router: Router, private http: HttpClient, private cartService: CartService) {}
 
   // ── Lifecycle ─────────────────────────────────────────
 
@@ -108,6 +109,8 @@ export class Cart implements OnInit {
       next: summary => {
         this.cart.set(summary);
         this.loading.set(false);
+        const total = summary.items.reduce((sum, i) => sum + i.quantity, 0);
+        this.cartService.setCount(total);
         },
       error: () => {
         this.loadError.set('Unable to load your cart. Please try again.');

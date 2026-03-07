@@ -1,23 +1,184 @@
-<div class="orders-page">
-  <h2>Previous Orders</h2>
-  <p class="subtitle">Track and view your order history</p>
+<div class="main-wrapper">
 
-  <div class="orders-list">
-    <div class="order-card">
-      <div class="order-header">
-        <span class="order-id">Order #1042</span>
-        <span class="order-status status-delivered">Delivered</span>
-      </div>
-      <p>2x Margherita, 1x Pepperoni</p>
-      <span class="order-total">$40.97</span>
+  <!-- TOAST -->
+  @if (toastVisible()) {
+    <div class="toast" [class.toast-error]="toastType() === 'error'">
+      {{ toastMessage() }}
     </div>
-    <div class="order-card">
-      <div class="order-header">
-        <span class="order-id">Order #1043</span>
-        <span class="order-status status-in-progress">In Progress</span>
-      </div>
-      <p>1x Supreme, 1x BBQ Chicken</p>
-      <span class="order-total">$32.98</span>
+  }
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1 class="page-title">Order History</h1>
+      @if (!loading() && allOrders().length > 0) {
+        <span class="order-count">{{ allOrders().length }} orders</span>
+      }
     </div>
   </div>
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <p class="state-msg">Loading your orders…</p>
+  }
+
+  <!-- ERROR -->
+  @if (loadError()) {
+    <p class="state-msg error">{{ loadError() }}</p>
+  }
+
+  @if (!loading() && !loadError()) {
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input"
+               type="text"
+               placeholder="Search orders, items…"
+               [ngModel]="searchQuery()"
+               (ngModelChange)="searchQuery.set($event)"
+               aria-label="Search orders" />
+        @if (searchQuery()) {
+          <button class="search-clear" (click)="searchQuery.set('')" aria-label="Clear search">✕</button>
+        }
+      </div>
+
+      <!-- Delivery method toggle -->
+      <div class="method-toggle">
+        @for (opt of [
+          { value: 'ALL',      label: 'All' },
+          { value: 'DELIVERY', label: '🚗 Delivery' },
+          { value: 'PICKUP',   label: '🏪 Pickup' }
+        ]; track opt.value) {
+          <button class="method-btn"
+                  [class.active]="filterDeliveryMethod() === opt.value"
+                  (click)="filterDeliveryMethod.set($any(opt.value))">
+            {{ opt.label }}
+          </button>
+        }
+      </div>
+
+    </div>
+
+    <!-- NO RESULTS -->
+    @if (isEmpty() && allOrders().length > 0) {
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h2 class="empty-title">No orders match your filters</h2>
+        <p class="empty-sub">Try adjusting your search or filters.</p>
+        <button class="browse-btn" (click)="clearFilters()">Clear Filters</button>
+      </div>
+    }
+
+    <!-- NO ORDERS AT ALL -->
+    @if (isEmpty() && allOrders().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">🍕</div>
+        <h2 class="empty-title">No orders yet</h2>
+        <p class="empty-sub">Your order history will appear here after your first order.</p>
+        <a class="browse-btn" routerLink="/menu">Browse Menu</a>
+      </div>
+    }
+
+    <!-- ORDER LIST -->
+    <div class="order-list">
+      @for (order of filteredOrders(); track order.orderId) {
+        <div class="order-card" [class.is-active]="isActiveOrder(order.status)" [class.is-cancelled]="order.status === 'CANCELLED'">
+
+          <!-- CARD HEADER (always visible) -->
+          <div class="order-card-header" (click)="toggleExpand(order.orderId)" role="button"
+               [attr.aria-expanded]="isExpanded(order.orderId)"
+               [attr.aria-label]="'Order #' + order.orderId + ' details'">
+
+            <div class="order-meta-left">
+              <div class="order-id-row">
+                <span class="order-id">#{{ order.orderId }}</span>
+                <span class="status-badge status-{{ order.status.toLowerCase().replace('_', '-') }}">
+                  {{ statusIcon(order.status) }} {{ statusLabel(order.status) }}
+                </span>
+                @if (isActiveOrder(order.status)) {
+                  <span class="live-dot" aria-label="Active order"></span>
+                }
+              </div>
+              <div class="order-date">
+                {{ formatDate(order.placedAt) }} at {{ formatTime(order.placedAt) }}
+                &nbsp;·&nbsp;
+                <span class="delivery-chip">
+                  {{ order.deliveryMethod === 'DELIVERY' ? '🚗 Delivery' : '🏪 Pickup' }}
+                </span>
+              </div>
+              <div class="order-item-summary">{{ itemSummary(order) }}</div>
+            </div>
+
+            <div class="order-meta-right">
+              <div class="order-total">${{ order.total | number:'1.2-2' }}</div>
+              <div class="expand-icon" [class.rotated]="isExpanded(order.orderId)">▾</div>
+            </div>
+
+          </div>
+
+          <!-- CARD DETAIL (expanded) -->
+          @if (isExpanded(order.orderId)) {
+            <div class="order-card-detail">
+
+              <div class="detail-divider"></div>
+
+              <!-- Items table -->
+              <div class="detail-items">
+                @for (item of order.items; track item.cartItemId) {
+                  <div class="detail-item">
+                    <div class="detail-item-info">
+                      <span class="detail-item-name">{{ item.name ?? 'Custom Pizza' }}</span>
+                      <div class="detail-item-meta">
+                        @if (item.sauceName) {
+                          <span class="meta-pill">{{ sauceLabel(item.sauceName) }}</span>
+                        }
+                      </div>
+                      @if ((item.toppingIdsLeft?.length ?? 0) > 0 && (item.toppingIdsRight?.length ?? 0) > 0) {
+                        <div class="detail-item-toppings">🍕 Half &amp; Half</div>
+                      } @else if ((item.toppingIdsFull?.length ?? 0) > 0) {
+                        <div class="detail-item-toppings">{{ item.toppingIdsFull!.length }} topping{{ item.toppingIdsFull!.length !== 1 ? 's' : '' }}</div>
+                      }
+                    </div>
+                    <div class="detail-item-right">
+                      <span class="detail-item-qty">× {{ item.quantity }}</span>
+                      <span class="detail-item-price">${{ item.lineTotal | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Totals -->
+              <div class="detail-totals">
+                <div class="detail-total-row">
+                  <span>Subtotal</span>
+                  <span>${{ order.subtotal | number:'1.2-2' }}</span>
+                </div>
+                @if (order.discount > 0) {
+                  <div class="detail-total-row discount-row">
+                    <span>🎉 {{ order.promoCode }} discount</span>
+                    <span>−${{ order.discount | number:'1.2-2' }}</span>
+                  </div>
+                }
+                <div class="detail-total-row">
+                  <span>Tax (8%)</span>
+                  <span>${{ order.tax | number:'1.2-2' }}</span>
+                </div>
+                <div class="detail-total-row grand-total-row">
+                  <span>Total</span>
+                  <span>${{ order.total | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+
+  }
+
 </div>
