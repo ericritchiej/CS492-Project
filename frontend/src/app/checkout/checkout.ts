@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { CartSummaryDto, CartItemDto } from '../cart/cart';
+import { CartService } from '../cart.service';
 
 // ── Interfaces ──────────────────────────────────────────
 
@@ -99,7 +100,7 @@ export class Checkout implements OnInit {
 
   // ── Constructor ───────────────────────────────────────
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cartService: CartService) {}
 
   // ── Lifecycle ─────────────────────────────────────────
 
@@ -172,6 +173,7 @@ export class Checkout implements OnInit {
         this.orderConfirmed.set(true);
         // Clear the live cart so it reflects "empty" behind the modal
         this.cart.set(null);
+        this.cartService.setCount(0);
       },
       error: err => {
         this.placing.set(false);

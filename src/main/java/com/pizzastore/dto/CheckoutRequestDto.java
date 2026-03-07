@@ -1,5 +1,6 @@
 package com.pizzastore.dto;
 
+import com.pizzastore.model.CartItem;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

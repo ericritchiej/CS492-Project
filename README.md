@@ -267,6 +267,7 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | `POST /api/cart/promo?code={code}` | Validate and apply a promo code. Returns 404 if not found, 400 if expired or below min order, 200 with updated cart summary on success. |
 | `DELETE /api/cart/promo` | Remove the applied promo code and recalculate totals. |
 | `GET /api/checkout/summary` | Get order summary with subtotal, applied discount, tax, and total |
+| `POST /api/checkout/process` | Place an order. Body: `{ deliveryMethod, deliveryAddress, addressId }`. `deliveryMethod` must be `DELIVERY` or `PICKUP`. For `DELIVERY`, `deliveryAddress` is required. `addressId` is the customer's saved address ID (from `GET /api/user`). Returns `{ orderId, status, deliveryMethod, total, message }`. |
 | `GET /api/reports` | Get store performance reports |
 | `GET /api/auth/status` | Get current authentication status |
 | `POST /api/auth/identify` | Identify user type (WORKER/CUSTOMER) from email domain |

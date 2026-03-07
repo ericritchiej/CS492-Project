@@ -1,5 +1,6 @@
 package com.pizzastore.repository;
 
+import com.pizzastore.model.CartItem;
 import com.pizzastore.model.Order;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -138,7 +139,7 @@ public class OrderRepository {
 
     @SuppressWarnings("resource")
     public Long save(Order order) {
-        logger.info("saveOrder order={}", order);
+        logger.info("save order={}", order);
 
         Record inserted = dsl.insertInto(DSL.table("orders"))
                 .set(DSL.field("customer_id", Integer.class), order.getCustomerId() == null ? null : order.getCustomerId().intValue())
@@ -160,5 +161,73 @@ public class OrderRepository {
         }
 
         return orderId.longValue();
+    }
+
+    @SuppressWarnings("resource")
+    public Long saveRegularItem(Long orderId, CartItem cartItem) {
+        logger.info("saveRegularItem orderId={}, cartItem={}", orderId, cartItem);
+
+        Record inserted = dsl.insertInto(DSL.table("order_items"))
+                .set(DSL.field("order_id", Integer.class), orderId.intValue())
+                .set(DSL.field("product_id", Integer.class), cartItem.getProductId().intValue())
+                .set(DSL.field("size_id", Integer.class), cartItem.getSizeId() == null ? null : cartItem.getSizeId().intValue())
+                .set(DSL.field("crust_id", Integer.class), cartItem.getCrustTypeId() == null ? null : cartItem.getCrustTypeId().intValue())
+                .set(DSL.field("sauce_name", String.class), cartItem.getSauceName() == null ? null : cartItem.getSauceName())
+                .set(DSL.field("quantity", Integer.class), cartItem.getQuantity())
+                .set(DSL.field("price_per", Double.class), cartItem.getPrice())
+                .set(DSL.field("item_notes", String.class), (String) null)
+                .returning(DSL.field("order_item_id", Integer.class))
+                .fetchOne();
+
+        Integer orderItemId = inserted == null ? null : inserted.get(DSL.field("order_item_id", Integer.class));
+        if (orderItemId == null) {
+            logger.error("order item id is null");
+            throw new RuntimeException("Failed to save order item.");
+        }
+
+        return orderItemId.longValue();
+    }
+
+    @SuppressWarnings("resource")
+    public Long saveCustomItem(Long orderId, CartItem cartItem) {
+        logger.info("saveCustomItem orderId={}, cartItem={}", orderId, cartItem);
+
+        Record inserted = dsl.insertInto(DSL.table("order_custom_item"))
+                .set(DSL.field("order_id", Integer.class), orderId.intValue())
+                .set(DSL.field("size_id", Integer.class), cartItem.getSizeId() == null ? null : cartItem.getSizeId().intValue())
+                .set(DSL.field("crust_id", Integer.class), cartItem.getCrustTypeId() == null ? null : cartItem.getCrustTypeId().intValue())
+                .set(DSL.field("sauce_name", String.class), cartItem.getSauceName() == null ? null : cartItem.getSauceName())
+                .set(DSL.field("quantity", Integer.class), cartItem.getQuantity())
+                .set(DSL.field("price_per", Double.class), cartItem.getPrice())
+                .returning(DSL.field("order_item_id", Integer.class))
+                .fetchOne();
+
+        Integer orderItemId = inserted == null ? null : inserted.get(DSL.field("order_item_id", Integer.class));
+        if (orderItemId == null) {
+            logger.error("custom order item id is null");
+            throw new RuntimeException("Failed to save custom order item.");
+        }
+
+        return orderItemId.longValue();
+    }
+
+    @SuppressWarnings("resource")
+    public Long saveCustomItemTopping(Long orderItemId, String pizzaHalf, Long toppingId) {
+        logger.info("saveCustomItemTopping orderItemId={} pizzaHalf={} toppingId={}", orderItemId, pizzaHalf, toppingId);
+
+        Record inserted = dsl.insertInto(DSL.table("order_custom_item_topping"))
+                .set(DSL.field("order_item_id", Integer.class), orderItemId.intValue())
+                .set(DSL.field("pizza_half", String.class), pizzaHalf)
+                .set(DSL.field("topping_id", Integer.class), toppingId.intValue())
+                .returning(DSL.field("custom_topping_id", Integer.class))
+                .fetchOne();
+
+        Integer customToppingId = inserted == null ? null : inserted.get(DSL.field("custom_topping_id", Integer.class));
+        if (customToppingId == null) {
+            logger.error("custom topping id is null");
+            throw new RuntimeException("Failed to save custom topping.");
+        }
+
+        return customToppingId.longValue();
     }
 }

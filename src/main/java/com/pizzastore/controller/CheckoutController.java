@@ -52,6 +52,10 @@ public class CheckoutController {
             HttpSession session) {
         logger.info("Received request to process checkout {}", request);
 
+        if (request == null) {
+            throw new IllegalArgumentException("Order request cannot be null");
+        }
+
         Object userIdObj = session.getAttribute("userId");
         if (userIdObj == null) {
             logger.error("not authorized to process checkout");
@@ -125,6 +129,40 @@ public class CheckoutController {
         order.setDeliveryMethod(deliveryMethod);
 
         Long orderId = orderRepository.save(order);
+
+        for (CartItem cartItem : items) {
+            if (cartItem.getProductId() != null) {
+                Long orderItemId = orderRepository.saveRegularItem(orderId, cartItem);
+
+                logger.info("Regular orderItem: {} is item id: {}", orderItemId, orderItemId);
+            } else {
+                Long orderItemId = orderRepository.saveCustomItem(orderId, cartItem);
+
+                if (cartItem.getToppingIdsFull() != null && cartItem.getToppingIdsFull().length > 0) {
+                    logger.info("toppingIds full: {}", cartItem.getToppingIdsFull());
+                    for (Long toppingId : cartItem.getToppingIdsFull()) {
+                        Long orderItemToppingId = orderRepository.saveCustomItemTopping(orderItemId, "FULL", toppingId);
+                    }
+                } else {
+                    if (cartItem.getToppingIdsLeft() != null && cartItem.getToppingIdsLeft().length > 0) {
+                        logger.info("toppingIds left: {}", cartItem.getToppingIdsLeft());
+                        for (Long toppingId : cartItem.getToppingIdsLeft()) {
+                            Long orderItemToppingId = orderRepository.saveCustomItemTopping(orderItemId, "LEFT", toppingId);
+                        }
+                    }
+
+                    if (cartItem.getToppingIdsRight() != null && cartItem.getToppingIdsRight().length > 0) {
+                        logger.info("toppingIds right: {}", cartItem.getToppingIdsRight());
+                        for (Long toppingId : cartItem.getToppingIdsRight()) {
+                            Long orderItemToppingId = orderRepository.saveCustomItemTopping(orderItemId, "RIGHT", toppingId);
+                        }
+                    }
+                }
+
+                logger.info("Custom orderItem: {} is item id: {}", orderItemId, orderItemId);
+            }
+        }
+
         cartRepository.clearCart();
 
         return ResponseEntity.ok(new OrderConfirmationDto(

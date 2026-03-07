@@ -85,6 +85,7 @@ class CheckoutControllerTest {
         cartRepository.addItem(item);
 
         when(orderRepository.save(any(Order.class))).thenReturn(123L);
+        when(orderRepository.saveRegularItem(any(Long.class), any(CartItem.class))).thenReturn(1L);
 
         ResponseEntity<OrderConfirmationDto> response = controller.processCheckout(
                 new CheckoutRequestDto("PICKUP", "", null), session);
@@ -96,5 +97,6 @@ class CheckoutControllerTest {
         assertEquals("PENDING", response.getBody().getStatus());
         assertTrue(cartRepository.findAll().isEmpty(), "Cart should be cleared after successful checkout");
         verify(orderRepository, times(1)).save(any(Order.class));
+        verify(orderRepository, times(1)).saveRegularItem(any(Long.class), any(CartItem.class));
     }
 }
