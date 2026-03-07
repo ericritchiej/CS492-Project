@@ -88,9 +88,13 @@ public class CheckoutController {
 
         Long customerId = ((Number) userIdObj).longValue();
         String deliveryAddress = request.getDeliveryAddress() == null ? null : request.getDeliveryAddress().trim();
-        Long addressId = "DELIVERY".equals(deliveryMethod)
-                ? orderRepository.findOrCreateAddressId(customerId, deliveryAddress)
-                : null;
+        Long addressId;
+        if ("DELIVERY".equals(deliveryMethod)) {
+            addressId = orderRepository.findOrCreateAddressId(customerId, deliveryAddress);
+        } else {
+            // For PICKUP, use an existing saved address if available (some DB schemas require address_id NOT NULL)
+            addressId = orderRepository.findExistingAddressId(customerId);
+        }
 
         BigDecimal subtotal = BigDecimal.valueOf(cartRepository.getTotal()).setScale(2, RoundingMode.HALF_UP);
         BigDecimal discount = BigDecimal.valueOf(cartRepository.getAppliedDiscount()).setScale(2, RoundingMode.HALF_UP);
