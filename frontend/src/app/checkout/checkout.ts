@@ -16,6 +16,7 @@ export interface UserProfileDto {
 }
 
 export interface AddressDto {
+  addressId: number;
   address1: string | null;
   address2: string | null;
   city:     string | null;
@@ -153,10 +154,12 @@ export class Checkout implements OnInit {
 
     // Snapshot the cart now so the modal has data even after cart clears
     const cartSnapshot = this.cart();
+    const addressDto = this.profile()?.address;
 
     const body = {
-      deliveryMethod: "DELIVERY",
+      deliveryMethod: this.deliveryMethod(),
       deliveryAddress: this.fullAddress(),
+      addressId: addressDto?.addressId ?? null,
     };
 
     this.http.post<{ orderId: number }>('/api/checkout/process', body).subscribe({

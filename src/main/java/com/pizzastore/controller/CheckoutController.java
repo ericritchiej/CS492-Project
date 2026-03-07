@@ -50,6 +50,7 @@ public class CheckoutController {
     public ResponseEntity<OrderConfirmationDto> processCheckout(
             @RequestBody CheckoutRequestDto request,
             HttpSession session) {
+        logger.info("Received request to process checkout {}", request);
 
         Object userIdObj = session.getAttribute("userId");
         if (userIdObj == null) {
@@ -87,13 +88,14 @@ public class CheckoutController {
         }
 
         Long customerId = ((Number) userIdObj).longValue();
+        Long addressIdInput = request.getAddressId();
         String deliveryAddress = request.getDeliveryAddress() == null ? null : request.getDeliveryAddress().trim();
         Long addressId;
         if ("DELIVERY".equals(deliveryMethod)) {
-            addressId = orderRepository.findOrCreateAddressId(customerId, deliveryAddress);
+            addressId = orderRepository.findOrCreateAddressId(addressIdInput, customerId, deliveryAddress);
         } else {
             // For PICKUP, use an existing saved address if available (some DB schemas require address_id NOT NULL)
-            addressId = orderRepository.findExistingAddressId(customerId);
+            addressId = orderRepository.findExistingAddressId(addressIdInput);
         }
 
         BigDecimal subtotal = BigDecimal.valueOf(cartRepository.getTotal()).setScale(2, RoundingMode.HALF_UP);
@@ -120,6 +122,7 @@ public class CheckoutController {
         order.setTotalAmount(total);
         order.setDiscountAmount(discount);
         order.setStatus("PENDING");
+        order.setDeliveryMethod(deliveryMethod);
 
         Long orderId = orderRepository.save(order);
         cartRepository.clearCart();

@@ -80,12 +80,14 @@ public class OrderRepository {
     }
 
     @SuppressWarnings("resource")
-    public Long findExistingAddressId(Long customerId) {
+    public Long findExistingAddressId(Long addressId) {
+        if (addressId == null) return null;
+
         String pk = resolveAddressPkColumn();
 
         Record1<Integer> existing = dsl.select(DSL.field(pk, Integer.class))
                 .from(DSL.table("addresses"))
-                .where(DSL.field("customer_id").eq(customerId))
+                .where(DSL.field("address_id", Long.class).eq(addressId))
                 .limit(1)
                 .fetchOne();
 
@@ -96,24 +98,23 @@ public class OrderRepository {
     }
 
     @SuppressWarnings("resource")
-    public Long findOrCreateAddressId(Long customerId, String deliveryAddress) {
-        logger.info("findOrCreateAddressId customerId={}", customerId);
+    public Long findOrCreateAddressId(Long addressId, Long customerId, String deliveryAddress) {
+        logger.info("findOrCreateAddressId addressId={}, customerId={}", addressId, customerId);
 
         ParsedAddress addr = parseAddress(deliveryAddress);
         String pk = resolveAddressPkColumn();
 
-        Record1<Integer> existing = dsl.select(DSL.field(pk, Integer.class))
-                .from(DSL.table("addresses"))
-                .where(DSL.field("customer_id").eq(customerId))
-                .and(DSL.field("street_addr_1").eq(addr.street1))
-                .and(DSL.field("city").eq(addr.city))
-                .and(DSL.field("state").eq(addr.state))
-                .and(DSL.field("zip_code").eq(addr.zip))
-                .fetchOne();
+        // If we already have an addressId, look it up and return it
+        if (addressId != null) {
+            Record1<Integer> existing = dsl.select(DSL.field(pk, Integer.class))
+                    .from(DSL.table("addresses"))
+                    .where(DSL.field("address_id", Long.class).eq(addressId))
+                    .fetchOne();
 
-        if (existing != null && existing.value1() != null) {
-            logger.info("address already exists");
-            return existing.value1().longValue();
+            if (existing != null && existing.value1() != null) {
+                logger.info("address already exists");
+                return existing.value1().longValue();
+            }
         }
 
         Record inserted = dsl.insertInto(DSL.table("addresses"))
@@ -126,13 +127,13 @@ public class OrderRepository {
                 .returning(DSL.field(pk, Integer.class))
                 .fetchOne();
 
-        Integer addressId = inserted == null ? null : inserted.get(DSL.field(pk, Integer.class));
-        if (addressId == null) {
-            logger.error("address id is null");
+        Integer addressIdReturn = inserted == null ? null : inserted.get(DSL.field(pk, Integer.class));
+        if (addressIdReturn == null) {
+            logger.error("address id is null after insert");
             throw new RuntimeException("Failed to create address record.");
         }
 
-        return addressId.longValue();
+        return addressIdReturn.longValue();
     }
 
     @SuppressWarnings("resource")
@@ -148,6 +149,7 @@ public class OrderRepository {
                 .set(DSL.field("total_amount", java.math.BigDecimal.class), order.getTotalAmount())
                 .set(DSL.field("discount_amount", java.math.BigDecimal.class), order.getDiscountAmount())
                 .set(DSL.field("status", String.class), order.getStatus())
+                .set(DSL.field("delivery_method", String.class), order.getDeliveryMethod())
                 .returning(DSL.field("order_id", Integer.class))
                 .fetchOne();
 

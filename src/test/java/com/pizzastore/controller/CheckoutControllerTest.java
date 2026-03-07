@@ -49,7 +49,7 @@ class CheckoutControllerTest {
     @Test
     void processCheckout_emptyCart_returnsBadRequest() {
         ResponseEntity<OrderConfirmationDto> response = controller.processCheckout(
-                new CheckoutRequestDto("PICKUP", ""), session);
+                new CheckoutRequestDto("PICKUP", "", null), session);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -67,7 +67,7 @@ class CheckoutControllerTest {
         cartRepository.addItem(item);
 
         ResponseEntity<OrderConfirmationDto> response = controller.processCheckout(
-                new CheckoutRequestDto("DELIVERY", ""), session);
+                new CheckoutRequestDto("DELIVERY", "", null), session);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -87,7 +87,7 @@ class CheckoutControllerTest {
         when(orderRepository.save(any(Order.class))).thenReturn(123L);
 
         ResponseEntity<OrderConfirmationDto> response = controller.processCheckout(
-                new CheckoutRequestDto("PICKUP", ""), session);
+                new CheckoutRequestDto("PICKUP", "", null), session);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
