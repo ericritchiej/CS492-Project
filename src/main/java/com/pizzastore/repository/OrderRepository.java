@@ -1,6 +1,5 @@
 package com.pizzastore.repository;
 
-import com.pizzastore.controller.CrustTypeController;
 import com.pizzastore.model.Order;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -91,12 +90,6 @@ public class OrderRepository {
                 .fetchOne();
 
         if (existing == null || existing.value1() == null) {
-    @SuppressWarnings("resource")
-    public Long findOrCreateAddressId(Long customerId, String deliveryAddress) {
-        logger.info("findOrCreateAddressId customerId={}", customerId);
-
-        if (deliveryAddress == null || deliveryAddress.trim().isEmpty()) {
-            logger.error("deliveryAddress is empty");
             return null;
         }
         return existing.value1().longValue();
