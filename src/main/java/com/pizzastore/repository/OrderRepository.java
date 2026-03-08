@@ -1,15 +1,21 @@
 package com.pizzastore.repository;
 
+import com.pizzastore.dto.OrderItemDto;
 import com.pizzastore.model.CartItem;
 import com.pizzastore.model.Order;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Record1;
+import org.jooq.Result;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 public class OrderRepository {
@@ -135,6 +141,123 @@ public class OrderRepository {
         }
 
         return addressIdReturn.longValue();
+    }
+
+    @SuppressWarnings("resource")
+    public List<Order> findByCustomerId(Long customerId) {
+        logger.info("findByCustomerId customerId={}", customerId);
+
+        return dsl.select()
+                .from(DSL.table("orders"))
+                .where(DSL.field("customer_id").eq(customerId))
+                .orderBy(DSL.field("order_timestamp").desc())
+                .fetchInto(Order.class);
+    }
+
+    @SuppressWarnings("resource")
+    public List<OrderItemDto> findRegularItemsByOrderId(Long orderId) {
+        logger.info("findRegularItemsByOrderId orderId={}", orderId);
+
+        return dsl.select(
+                        DSL.field("oi.order_item_id").as("order_item_id"),
+                        DSL.field("p.product_name").as("product_name"),
+                        DSL.field("oi.quantity").as("quantity"),
+                        DSL.field("oi.price_per").as("price_per"),
+                        DSL.field("oi.size_id").as("size_id"),
+                        DSL.field("ps.size_name").as("size_name"),
+                        DSL.field("oi.crust_id").as("crust_id"),
+                        DSL.field("ct.crust_name").as("crust_name"),
+                        DSL.field("oi.sauce_name").as("sauce_name")
+                )
+                .from(DSL.table("order_items").as("oi"))
+                .join(DSL.table("products").as("p"))
+                    .on(DSL.field("oi.product_id").eq(DSL.field("p.product_id")))
+                .leftJoin(DSL.table("pizza_sizes").as("ps"))
+                    .on(DSL.field("oi.size_id").eq(DSL.field("ps.size_id")))
+                .leftJoin(DSL.table("crust_types").as("ct"))
+                    .on(DSL.field("oi.crust_id").eq(DSL.field("ct.crust_id")))
+                .where(DSL.field("oi.order_id").eq(orderId))
+                .fetch()
+                .map(r -> {
+                    OrderItemDto dto = new OrderItemDto();
+                    dto.setCartItemId(r.get("order_item_id", Long.class));
+                    dto.setName(r.get("product_name", String.class));
+                    dto.setQuantity(r.get("quantity", Integer.class));
+                    BigDecimal pricePer = r.get("price_per", BigDecimal.class);
+                    dto.setLineTotal(pricePer != null && dto.getQuantity() != null ? pricePer.multiply(BigDecimal.valueOf(dto.getQuantity())) : BigDecimal.ZERO);
+                    dto.setSizeId(r.get("size_id", Integer.class));
+                    dto.setSizeName(r.get("size_name", String.class));
+                    dto.setCrustTypeId(r.get("crust_id", Integer.class));
+                    dto.setCrustName(r.get("crust_name", String.class));
+                    dto.setSauceName(r.get("sauce_name", String.class));
+                    return dto;
+                });
+    }
+
+    @SuppressWarnings("resource")
+    public List<OrderItemDto> findCustomItemsByOrderId(Long orderId) {
+        logger.info("findCustomItemsByOrderId orderId={}", orderId);
+
+        Result<? extends Record> items = dsl.select(
+                        DSL.field("oci.order_item_id").as("order_item_id"),
+                        DSL.field("oci.quantity").as("quantity"),
+                        DSL.field("oci.price_per").as("price_per"),
+                        DSL.field("oci.size_id").as("size_id"),
+                        DSL.field("ps.size_name").as("size_name"),
+                        DSL.field("oci.crust_id").as("crust_id"),
+                        DSL.field("ct.crust_name").as("crust_name"),
+                        DSL.field("oci.sauce_name").as("sauce_name")
+                )
+                .from(DSL.table("order_custom_item").as("oci"))
+                .leftJoin(DSL.table("pizza_sizes").as("ps"))
+                    .on(DSL.field("oci.size_id").eq(DSL.field("ps.size_id")))
+                .leftJoin(DSL.table("crust_types").as("ct"))
+                    .on(DSL.field("oci.crust_id").eq(DSL.field("ct.crust_id")))
+                .where(DSL.field("oci.order_id").eq(orderId))
+                .fetch();
+
+        List<OrderItemDto> result = new ArrayList<>();
+
+        for (Record item : items) {
+            Long itemId = item.get("order_item_id", Long.class);
+
+            Result<Record> toppingRecords = dsl.select()
+                    .from(DSL.table("order_custom_item_topping"))
+                    .where(DSL.field("order_item_id").eq(itemId))
+                    .fetch();
+
+            List<Integer> full  = new ArrayList<>();
+            List<Integer> left  = new ArrayList<>();
+            List<Integer> right = new ArrayList<>();
+
+            for (Record t : toppingRecords) {
+                String half       = t.get("pizza_half", String.class);
+                Integer toppingId = t.get("topping_id", Integer.class);
+                if ("LEFT".equalsIgnoreCase(half))       left.add(toppingId);
+                else if ("RIGHT".equalsIgnoreCase(half)) right.add(toppingId);
+                else                                      full.add(toppingId);
+            }
+
+            OrderItemDto dto = new OrderItemDto();
+            dto.setCartItemId(itemId);
+            dto.setName("Custom Pizza");
+            dto.setQuantity(item.get("quantity", Integer.class));
+            BigDecimal pricePer = item.get("price_per", BigDecimal.class);
+            Integer qty = item.get("quantity", Integer.class);
+            dto.setLineTotal(pricePer != null && qty != null ? pricePer.multiply(BigDecimal.valueOf(qty)) : BigDecimal.ZERO);
+            dto.setSizeId(item.get("size_id", Integer.class));
+            dto.setSizeName(item.get("size_name", String.class));
+            dto.setCrustTypeId(item.get("crust_id", Integer.class));
+            dto.setCrustName(item.get("crust_name", String.class));
+            dto.setSauceName(item.get("sauce_name", String.class));
+            dto.setToppingIdsFull(full.isEmpty()  ? null : full);
+            dto.setToppingIdsLeft(left.isEmpty()  ? null : left);
+            dto.setToppingIdsRight(right.isEmpty() ? null : right);
+
+            result.add(dto);
+        }
+
+        return result;
     }
 
     @SuppressWarnings("resource")

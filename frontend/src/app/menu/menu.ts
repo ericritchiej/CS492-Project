@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule }  from '@angular/common';
 import { FormsModule, ReactiveFormsModule }  from '@angular/forms';
 import { HttpClient }   from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { CartService } from '../cart.service';
 
 
@@ -169,58 +170,29 @@ export class Menu implements OnInit {
     this.loading.set(true);
     this.loadError.set('');
 
-    this.http.get<Category[]>('/api/productCategory/getProductCategories').subscribe({
-      next: cats => {
-        this.categories = cats;
-      },
-      error: () => {
-        this.loadError.set('Unable to load menu categories. Please try again.');
-        this.loading.set(false);
-      },
-    });
-
-  this.http.get<Product[]>('/api/product/getProducts').subscribe({
-      next: products => {
+    forkJoin({
+      categories: this.http.get<Category[]>('/api/productCategory/getProductCategories'),
+      products:   this.http.get<Product[]>('/api/product/getProducts'),
+      sizes:      this.http.get<PizzaSize[]>('/api/pizzaSize/getPizzaSizes'),
+      crusts:     this.http.get<CrustType[]>('/api/crust/getCrusts'),
+      toppings:   this.http.get<Topping[]>('/api/topping/getToppings'),
+    }).subscribe({
+      next: ({ categories, products, sizes, crusts, toppings }) => {
+        this.categories = categories;
         this.products.set(products);
         this.buildDerivedData(products);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loadError.set('Unable to load menu products. Please try again.');
-        this.loading.set(false);
-      },
-    });
-
-    this.http.get<PizzaSize[]>('/api/pizzaSize/getPizzaSizes').subscribe({
-      next: sizes => {
         this.sizes.set(sizes);
-        if (sizes.length) this.selectedSizeId.set(sizes[1]?.sizeId ?? sizes[0].sizeId); // default Medium
-      },
-      error: () => {
-        this.loadError.set('Unable to load pizza sizes. Please try again.');
-        this.loading.set(false);
-      },
-    });
-
-    this.http.get<CrustType[]>('/api/crust/getCrusts').subscribe({
-      next: crusts => {
+        if (sizes.length) this.selectedSizeId.set(sizes[1]?.sizeId ?? sizes[0].sizeId);
         this.crustTypes.set(crusts);
         if (crusts.length) this.selectedCrustId.set(crusts[0].crustId);
+        this.toppings.set(toppings);
+        this.loading.set(false);
       },
       error: () => {
-        this.loadError.set('Unable to load crust types. Please try again.');
+        this.loadError.set('Unable to load menu. Please try again.');
         this.loading.set(false);
       },
     });
-
-    this.http.get<Topping[]>('/api/topping/getToppings').subscribe({
-      next:  tops  => this.toppings.set(tops),
-      error: ()    => {
-        this.loadError.set('Unable to load toppings. Please try again.');
-        this.loading.set(false);
-      },
-    });
-
   }
 
   // ── Category sidebar helpers ──────────────────────────

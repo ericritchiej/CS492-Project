@@ -12,7 +12,9 @@ export interface OrderItemDto {
   quantity:        number;
   lineTotal:       number;
   sizeId?:         number;
+  sizeName?:       string;
   crustTypeId?:    number;
+  crustName?:      string;
   sauceName?:      string;
   toppingIdsFull?:  number[];
   toppingIdsLeft?:  number[];
@@ -34,6 +36,11 @@ export interface OrderDto {
 
 export type OrderStatus = 'PLACED' | 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
 
+interface ToppingLookup {
+  toppingId: number;
+  toppingName: string;
+}
+
 // ── Component ────────────────────────────────────────────
 
 @Component({
@@ -48,6 +55,7 @@ export class Orders implements OnInit {
   // ── State Signals ─────────────────────────────────────
 
   allOrders   = signal<OrderDto[]>([]);
+  toppings    = signal<ToppingLookup[]>([]);
   loading     = signal(true);
   loadError   = signal('');
 
@@ -74,7 +82,6 @@ export class Orders implements OnInit {
     const query    = this.searchQuery().trim().toLowerCase();
 
     return this.allOrders().filter(order => {
-      if (status !== 'ALL' && order.status !== status) return false;
       if (method !== 'ALL' && order.deliveryMethod !== method) return false;
       if (query) {
         const haystack = [
@@ -97,6 +104,10 @@ export class Orders implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
+    this.http.get<ToppingLookup[]>('/api/topping/getToppings').subscribe({
+      next:  tops => this.toppings.set(tops),
+      error: ()   => this.showToast('Unable to load topping names.', 'error'),
+    });
     this.loadOrders();
   }
 
@@ -113,6 +124,14 @@ export class Orders implements OnInit {
         this.loading.set(false);
         },
     });
+  }
+
+  toppingName(id: number): string {
+    return this.toppings().find(t => t.toppingId === id)?.toppingName ?? `#${id}`;
+  }
+
+  toppingNames(ids: number[]): string {
+    return ids.map(id => this.toppingName(id)).join(', ');
   }
 
   // ── Interactions ──────────────────────────────────────

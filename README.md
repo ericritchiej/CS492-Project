@@ -97,10 +97,10 @@ http://localhost:4200
 
 You will be redirected to the **Restaurant Info** page by default. After logging in or creating an account, the logged-in user's name is displayed in the nav bar. The nav contains:
 
-- **Menu** — Browse the pizza menu with crust types and prices
+- **Menu** — Browse the pizza menu by category. Click any customizable item to open the pizza builder modal (choose size, crust, sauce level, and toppings including half-and-half). Non-customizable items can be added directly with a quantity selector. The cart badge in the nav bar updates live.
 - **Restaurant Info** — View the restaurant name, address, phone, hours, and current promotions
 - **User Tools** (dropdown) — Hover to reveal:
-  - **Previous Orders** — View order history and delivery status
+  - **Previous Orders** — View order history with expandable cards showing item details (size, crust, sauce, toppings), subtotal, tax, and total
   - **Profile** — View customer profile details
   - **Login** — Sign-in page with username/password fields and form validation
   - **Manager Login** — Employee/manager sign-in page
@@ -144,6 +144,11 @@ PizzaStore/
 │       │   └── LoginType.java                # Enum: WORKER, CUSTOMER, UNKNOWN
 │       ├── service/
 │       │   └── UserTypeResolver.java         # Resolves login type from email domain
+│       ├── dto/                              # Data Transfer Objects (API response shapes)
+│       │   ├── OrderDto.java                 # Order history response (id, status, items, subtotal, tax, total, discount)
+│       │   ├── OrderItemDto.java             # Individual order item (name, size, crust, sauce, toppings, lineTotal)
+│       │   ├── OrderConfirmationDto.java     # Checkout confirmation response
+│       │   └── CheckoutRequestDto.java       # Checkout request body
 │       ├── repository/                       # Database repositories (run the SQL queries)
 │       │   ├── UserRepository.java           # Customer lookup and registration queries
 │       │   ├── EmployeeRepository.java       # Employee lookup queries
@@ -155,6 +160,7 @@ PizzaStore/
 │       │   ├── RestaurantInfoRepository.java # Fetches restaurant details
 │       │   ├── RestaurantHoursRepository.java# Fetches restaurant hours rows
 │       │   ├── PromotionRepository.java      # Fetches active promotions (read-only)
+│       │   ├── OrderRepository.java          # Order persistence and history queries (regular items, custom items, toppings)
 │       │   └── PaymentRepository.java        # Inserts payment records into payment_methods table
 │       └── controller/                       # REST controllers (handle HTTP requests)
 │           ├── AuthController.java           # Authentication: sign-in & registration
@@ -172,6 +178,7 @@ PizzaStore/
 │           ├── CartController.java           # Shopping cart
 │           ├── PaymentController.java        # Payment validation and persistence
 │           ├── CheckoutController.java       # Checkout / order summary
+│           ├── OrderController.java          # Order history for the logged-in customer
 │           ├── ReportingController.java      # Store reports
 │           ├── SpaController.java            # Serves Angular's index.html for client-side routes
 │           └── GlobalExceptionHandler.java   # Catches unhandled errors and returns 500
@@ -186,8 +193,9 @@ PizzaStore/
 │       ├── auth-http.service.ts             # HTTP calls for auth endpoints
 │       ├── customer-login-routing.ts        # Route guard — redirects guests to /login
 │       ├── manager-login-routing.ts         # Route guard — redirects non-managers to /manager-login
-│       ├── menu/                            # Menu page
-│       ├── orders/                          # Previous Orders page
+│       ├── menu/                            # Menu page — product grid, custom pizza builder modal, add to cart
+│       ├── cart.service.ts                  # Shared cart item count (used by nav bar badge)
+│       ├── orders/                          # Previous Orders page — order history with expandable item details
 │       ├── admin/                           # Admin dashboard (crust, size, category, product, topping CRUD)
 │       ├── login/                           # Login page
 │       ├── manager-login/                   # Manager/employee login page
@@ -214,6 +222,7 @@ PizzaStore/
 │       ├── RestaurantInfoControllerTest.java# Tests for restaurant info endpoint
 │       ├── RestaurantHoursControllerTest.java # Tests for restaurant hours endpoint
 │       ├── CartControllerTest.java          # Tests for cart add, deduplication, update quantity, and promo apply/remove
+│       ├── OrderControllerTest.java         # Tests for order history: auth, item population, subtotal/tax calculation, discount
 │       └── PromotionsControllerTest.java    # Tests for promotions CRUD endpoints (GET, POST, PUT, DELETE)
 ├── .env.example                             # Template for your .env file (safe to commit)
 ├── .github/workflows/ci.yml                # GitHub Actions — runs tests on push/PR
@@ -271,6 +280,7 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | `GET /api/checkout/summary` | Get order summary with subtotal, applied discount, tax, and total |
 | `POST /api/payment/process` | Validate payment info and return a confirmation number. Body: `{ cardNumber, expirationDate, cvv, deliveryMethod }`. Returns 400 if any field is missing or blank. Returns `{ message, confirmationNumber, deliveryMethod }` on success. |
 | `POST /api/checkout/process` | Place an order. Body: `{ deliveryMethod, deliveryAddress, addressId, cardNumber, expirationDate, cvv }`. `deliveryMethod` must be `DELIVERY` or `PICKUP`. For `DELIVERY`, `deliveryAddress` is required. `addressId` is the customer's saved address ID (from `GET /api/user`). Saves the order, all order items, and payment record. Returns `{ orderId, status, deliveryMethod, total, message }`. |
+| `GET /api/orders/history` | Get order history for the logged-in customer. Returns a list of orders with items (name, size, crust, sauce, toppings), subtotal, tax, discount, and total. Requires an active session. Returns 401 if unauthenticated. |
 | `GET /api/reports` | Get store performance reports |
 | `GET /api/auth/status` | Get current authentication status |
 | `POST /api/auth/identify` | Identify user type (WORKER/CUSTOMER) from email domain |
@@ -297,7 +307,7 @@ mvnw.cmd test
 This compiles the code and runs all tests. You will see output like:
 
 ```
-Tests run: 107, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 120, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
