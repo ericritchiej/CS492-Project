@@ -12,4 +12,7 @@ public class CheckoutRequestDto {
     private String deliveryMethod;
     private String deliveryAddress;
     private Long addressId;
+    private String cardNumber;
+    private String expirationDate;
+    private String cvv;
 }

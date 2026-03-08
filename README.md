@@ -154,7 +154,8 @@ PizzaStore/
 │       │   ├── PromotionsRepository.java     # Promotions CRUD queries
 │       │   ├── RestaurantInfoRepository.java # Fetches restaurant details
 │       │   ├── RestaurantHoursRepository.java# Fetches restaurant hours rows
-│       │   └── PromotionRepository.java      # Fetches active promotions (read-only)
+│       │   ├── PromotionRepository.java      # Fetches active promotions (read-only)
+│       │   └── PaymentRepository.java        # Inserts payment records into payment_methods table
 │       └── controller/                       # REST controllers (handle HTTP requests)
 │           ├── AuthController.java           # Authentication: sign-in & registration
 │           ├── PizzaController.java          # Pizzas, orders, stats endpoints
@@ -169,6 +170,7 @@ PizzaStore/
 │           ├── RestaurantHoursController.java# Restaurant hours endpoint
 │           ├── PromotionController.java      # Promotions read endpoint (public-facing)
 │           ├── CartController.java           # Shopping cart
+│           ├── PaymentController.java        # Payment validation and persistence
 │           ├── CheckoutController.java       # Checkout / order summary
 │           ├── ReportingController.java      # Store reports
 │           ├── SpaController.java            # Serves Angular's index.html for client-side routes
@@ -267,7 +269,8 @@ The backend exposes the following REST endpoints (all prefixed with `/api`):
 | `POST /api/cart/promo?code={code}` | Validate and apply a promo code. Returns 404 if not found, 400 if expired or below min order, 200 with updated cart summary on success. |
 | `DELETE /api/cart/promo` | Remove the applied promo code and recalculate totals. |
 | `GET /api/checkout/summary` | Get order summary with subtotal, applied discount, tax, and total |
-| `POST /api/checkout/process` | Place an order. Body: `{ deliveryMethod, deliveryAddress, addressId }`. `deliveryMethod` must be `DELIVERY` or `PICKUP`. For `DELIVERY`, `deliveryAddress` is required. `addressId` is the customer's saved address ID (from `GET /api/user`). Returns `{ orderId, status, deliveryMethod, total, message }`. |
+| `POST /api/payment/process` | Validate payment info and return a confirmation number. Body: `{ cardNumber, expirationDate, cvv, deliveryMethod }`. Returns 400 if any field is missing or blank. Returns `{ message, confirmationNumber, deliveryMethod }` on success. |
+| `POST /api/checkout/process` | Place an order. Body: `{ deliveryMethod, deliveryAddress, addressId, cardNumber, expirationDate, cvv }`. `deliveryMethod` must be `DELIVERY` or `PICKUP`. For `DELIVERY`, `deliveryAddress` is required. `addressId` is the customer's saved address ID (from `GET /api/user`). Saves the order, all order items, and payment record. Returns `{ orderId, status, deliveryMethod, total, message }`. |
 | `GET /api/reports` | Get store performance reports |
 | `GET /api/auth/status` | Get current authentication status |
 | `POST /api/auth/identify` | Identify user type (WORKER/CUSTOMER) from email domain |

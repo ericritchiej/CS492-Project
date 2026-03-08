@@ -69,10 +69,6 @@
           </div>
         </div>
 
-        <div class="co-modal-pay-note">
-          💳&nbsp; Payment collected at delivery or pickup — no charge now
-        </div>
-
         <!-- Actions -->
         <div class="co-modal-actions">
           <a class="co-modal-btn-primary" routerLink="/menu" (click)="closeModal()">
@@ -236,12 +232,26 @@
             </label>
           </div>
 
-          <div class="payment-banner">
-            <div class="payment-icon-wrap">💳</div>
-            <div class="payment-text">
-              <strong>Pay Now by Card</strong>
-              <p>Enter your card details to pay now, or pay on delivery or pickup.</p>
-              <a class="action-link" routerLink="/payment">Pay by Card →</a>
+          <div class="profile-grid" style="margin-top: 1rem;">
+            <div class="profile-field">
+              <span class="field-label">Card Number</span>
+              <input class="field-input" type="text" [(ngModel)]="cardNumber"
+                     (input)="formatCardNumber($event)"
+                     placeholder="1234 5678 9012 3456" maxlength="19"
+                     autocomplete="cc-number" />
+            </div>
+            <div class="profile-field">
+              <span class="field-label">Expiration Date</span>
+              <input class="field-input" type="text" [(ngModel)]="expirationDate"
+                     (input)="formatExpDate($event)"
+                     placeholder="MM/YY" maxlength="5"
+                     autocomplete="cc-exp" />
+            </div>
+            <div class="profile-field">
+              <span class="field-label">CVV</span>
+              <input class="field-input" type="text" [(ngModel)]="cvv"
+                     placeholder="123" maxlength="3"
+                     autocomplete="cc-csc" />
             </div>
           </div>
         </section>
@@ -298,8 +308,6 @@
               Place Order →
             }
           </button>
-
-          <div class="pay-reminder">💳 Payment collected at delivery / pickup</div>
 
           <a class="continue-link" routerLink="/cart">← Back to Cart</a>
         </div>

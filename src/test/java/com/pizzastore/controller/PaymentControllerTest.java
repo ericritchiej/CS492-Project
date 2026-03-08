@@ -1,8 +1,10 @@
 package com.pizzastore.controller;
 
+import com.pizzastore.repository.PaymentRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -14,6 +16,9 @@ public class PaymentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private PaymentRepository paymentRepository;
 
     private static final String VALID_PAYMENT_JSON =
             "{\"cardNumber\":\"4111111111111111\",\"expirationDate\":\"12/27\",\"cvv\":\"123\",\"deliveryMethod\":\"DELIVERY\"}";
@@ -78,6 +83,28 @@ public class PaymentControllerTest {
     @Test
     public void processPayment_returnsBadRequestWhenCvvMissing() throws Exception {
         String json = "{\"cardNumber\":\"4111111111111111\",\"expirationDate\":\"12/27\",\"deliveryMethod\":\"DELIVERY\"}";
+
+        mockMvc.perform(post("/api/payment/process")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("All payment fields are required."));
+    }
+
+    @Test
+    public void processPayment_returnsBadRequestWhenExpirationDateBlank() throws Exception {
+        String json = "{\"cardNumber\":\"4111111111111111\",\"expirationDate\":\"  \",\"cvv\":\"123\",\"deliveryMethod\":\"DELIVERY\"}";
+
+        mockMvc.perform(post("/api/payment/process")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("All payment fields are required."));
+    }
+
+    @Test
+    public void processPayment_returnsBadRequestWhenCvvBlank() throws Exception {
+        String json = "{\"cardNumber\":\"4111111111111111\",\"expirationDate\":\"12/27\",\"cvv\":\"  \",\"deliveryMethod\":\"DELIVERY\"}";
 
         mockMvc.perform(post("/api/payment/process")
                         .contentType(MediaType.APPLICATION_JSON)
