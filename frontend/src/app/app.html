@@ -17,11 +17,11 @@
           @if (user.role === 'MANAGER') {
             <a routerLink="/admin">Admin</a>
             <a routerLink="/promotions">Promotions</a>
+            <a (click)="logout()" routerLink="/login" style="cursor:pointer">Logout</a>
           }
         } @else {
-          <a routerLink="/login">Login</a>
+          <a routerLink="/login">Customer Login</a>
           <a routerLink="/manager-login">Manager Login</a>
-          <a (click)="logout()" routerLink="/login" style="cursor:pointer">Logout</a>
         }
       </div>
 
