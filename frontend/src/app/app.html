@@ -12,6 +12,7 @@
           @if (user.role === 'Customer') {
             <a routerLink="/orders">Previous Orders</a>
             <a routerLink="/profile">Profile</a>
+            <a (click)="logout()" routerLink="/login" style="cursor:pointer">Logout</a>
           }
           @if (user.role === 'MANAGER') {
             <a routerLink="/admin">Admin</a>
@@ -20,6 +21,7 @@
         } @else {
           <a routerLink="/login">Login</a>
           <a routerLink="/manager-login">Manager Login</a>
+          <a (click)="logout()" routerLink="/login" style="cursor:pointer">Logout</a>
         }
       </div>
 
