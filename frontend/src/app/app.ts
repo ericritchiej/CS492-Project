@@ -102,4 +102,15 @@ export class App implements OnInit {
 
     this.cartService.cartCount$.subscribe(count => this.cartCount.set(count));
   }
+
+  logout(): void {
+    this.http.post('/api/auth/signOut', {}).subscribe({
+      next: () => {
+        this.auth.setUser(null);
+      },
+      error: () => {
+        this.auth.setUser(null);
+      }
+    });
+  }
 }
