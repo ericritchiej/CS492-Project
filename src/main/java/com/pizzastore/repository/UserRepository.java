@@ -106,6 +106,7 @@ public class UserRepository {
         logger.info("Finding address for customerId {}", customerId);
 
         return dsl.select(
+                        DSL.field("address_id").as("id"),
                         DSL.field("street_addr_1"),
                         DSL.field("street_addr_2"),
                         DSL.field("city"),
@@ -114,6 +115,8 @@ public class UserRepository {
                 )
                 .from(DSL.table("addresses"))
                 .where(DSL.field("customer_id").eq(customerId))
+                .orderBy(DSL.field("address_id").desc())
+                .limit(1)
                 .fetchOneInto(Address.class);
     }
 

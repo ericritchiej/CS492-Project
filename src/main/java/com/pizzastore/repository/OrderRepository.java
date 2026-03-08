@@ -1,5 +1,6 @@
 package com.pizzastore.repository;
 
+import com.pizzastore.model.CartItem;
 import com.pizzastore.model.Order;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -80,12 +81,14 @@ public class OrderRepository {
     }
 
     @SuppressWarnings("resource")
-    public Long findExistingAddressId(Long customerId) {
+    public Long findExistingAddressId(Long addressId) {
+        if (addressId == null) return null;
+
         String pk = resolveAddressPkColumn();
 
         Record1<Integer> existing = dsl.select(DSL.field(pk, Integer.class))
                 .from(DSL.table("addresses"))
-                .where(DSL.field("customer_id").eq(customerId))
+                .where(DSL.field("address_id", Long.class).eq(addressId))
                 .limit(1)
                 .fetchOne();
 
@@ -96,24 +99,23 @@ public class OrderRepository {
     }
 
     @SuppressWarnings("resource")
-    public Long findOrCreateAddressId(Long customerId, String deliveryAddress) {
-        logger.info("findOrCreateAddressId customerId={}", customerId);
+    public Long findOrCreateAddressId(Long addressId, Long customerId, String deliveryAddress) {
+        logger.info("findOrCreateAddressId addressId={}, customerId={}", addressId, customerId);
 
         ParsedAddress addr = parseAddress(deliveryAddress);
         String pk = resolveAddressPkColumn();
 
-        Record1<Integer> existing = dsl.select(DSL.field(pk, Integer.class))
-                .from(DSL.table("addresses"))
-                .where(DSL.field("customer_id").eq(customerId))
-                .and(DSL.field("street_addr_1").eq(addr.street1))
-                .and(DSL.field("city").eq(addr.city))
-                .and(DSL.field("state").eq(addr.state))
-                .and(DSL.field("zip_code").eq(addr.zip))
-                .fetchOne();
+        // If we already have an addressId, look it up and return it
+        if (addressId != null) {
+            Record1<Integer> existing = dsl.select(DSL.field(pk, Integer.class))
+                    .from(DSL.table("addresses"))
+                    .where(DSL.field("address_id", Long.class).eq(addressId))
+                    .fetchOne();
 
-        if (existing != null && existing.value1() != null) {
-            logger.info("address already exists");
-            return existing.value1().longValue();
+            if (existing != null && existing.value1() != null) {
+                logger.info("address already exists");
+                return existing.value1().longValue();
+            }
         }
 
         Record inserted = dsl.insertInto(DSL.table("addresses"))
@@ -126,18 +128,18 @@ public class OrderRepository {
                 .returning(DSL.field(pk, Integer.class))
                 .fetchOne();
 
-        Integer addressId = inserted == null ? null : inserted.get(DSL.field(pk, Integer.class));
-        if (addressId == null) {
-            logger.error("address id is null");
+        Integer addressIdReturn = inserted == null ? null : inserted.get(DSL.field(pk, Integer.class));
+        if (addressIdReturn == null) {
+            logger.error("address id is null after insert");
             throw new RuntimeException("Failed to create address record.");
         }
 
-        return addressId.longValue();
+        return addressIdReturn.longValue();
     }
 
     @SuppressWarnings("resource")
     public Long save(Order order) {
-        logger.info("saveOrder order={}", order);
+        logger.info("save order={}", order);
 
         Record inserted = dsl.insertInto(DSL.table("orders"))
                 .set(DSL.field("customer_id", Integer.class), order.getCustomerId() == null ? null : order.getCustomerId().intValue())
@@ -148,6 +150,7 @@ public class OrderRepository {
                 .set(DSL.field("total_amount", java.math.BigDecimal.class), order.getTotalAmount())
                 .set(DSL.field("discount_amount", java.math.BigDecimal.class), order.getDiscountAmount())
                 .set(DSL.field("status", String.class), order.getStatus())
+                .set(DSL.field("delivery_method", String.class), order.getDeliveryMethod())
                 .returning(DSL.field("order_id", Integer.class))
                 .fetchOne();
 
@@ -158,5 +161,73 @@ public class OrderRepository {
         }
 
         return orderId.longValue();
+    }
+
+    @SuppressWarnings("resource")
+    public Long saveRegularItem(Long orderId, CartItem cartItem) {
+        logger.info("saveRegularItem orderId={}, cartItem={}", orderId, cartItem);
+
+        Record inserted = dsl.insertInto(DSL.table("order_items"))
+                .set(DSL.field("order_id", Integer.class), orderId.intValue())
+                .set(DSL.field("product_id", Integer.class), cartItem.getProductId().intValue())
+                .set(DSL.field("size_id", Integer.class), cartItem.getSizeId() == null ? null : cartItem.getSizeId().intValue())
+                .set(DSL.field("crust_id", Integer.class), cartItem.getCrustTypeId() == null ? null : cartItem.getCrustTypeId().intValue())
+                .set(DSL.field("sauce_name", String.class), cartItem.getSauceName() == null ? null : cartItem.getSauceName())
+                .set(DSL.field("quantity", Integer.class), cartItem.getQuantity())
+                .set(DSL.field("price_per", Double.class), cartItem.getPrice())
+                .set(DSL.field("item_notes", String.class), (String) null)
+                .returning(DSL.field("order_item_id", Integer.class))
+                .fetchOne();
+
+        Integer orderItemId = inserted == null ? null : inserted.get(DSL.field("order_item_id", Integer.class));
+        if (orderItemId == null) {
+            logger.error("order item id is null");
+            throw new RuntimeException("Failed to save order item.");
+        }
+
+        return orderItemId.longValue();
+    }
+
+    @SuppressWarnings("resource")
+    public Long saveCustomItem(Long orderId, CartItem cartItem) {
+        logger.info("saveCustomItem orderId={}, cartItem={}", orderId, cartItem);
+
+        Record inserted = dsl.insertInto(DSL.table("order_custom_item"))
+                .set(DSL.field("order_id", Integer.class), orderId.intValue())
+                .set(DSL.field("size_id", Integer.class), cartItem.getSizeId() == null ? null : cartItem.getSizeId().intValue())
+                .set(DSL.field("crust_id", Integer.class), cartItem.getCrustTypeId() == null ? null : cartItem.getCrustTypeId().intValue())
+                .set(DSL.field("sauce_name", String.class), cartItem.getSauceName() == null ? null : cartItem.getSauceName())
+                .set(DSL.field("quantity", Integer.class), cartItem.getQuantity())
+                .set(DSL.field("price_per", Double.class), cartItem.getPrice())
+                .returning(DSL.field("order_item_id", Integer.class))
+                .fetchOne();
+
+        Integer orderItemId = inserted == null ? null : inserted.get(DSL.field("order_item_id", Integer.class));
+        if (orderItemId == null) {
+            logger.error("custom order item id is null");
+            throw new RuntimeException("Failed to save custom order item.");
+        }
+
+        return orderItemId.longValue();
+    }
+
+    @SuppressWarnings("resource")
+    public Long saveCustomItemTopping(Long orderItemId, String pizzaHalf, Long toppingId) {
+        logger.info("saveCustomItemTopping orderItemId={} pizzaHalf={} toppingId={}", orderItemId, pizzaHalf, toppingId);
+
+        Record inserted = dsl.insertInto(DSL.table("order_custom_item_topping"))
+                .set(DSL.field("order_item_id", Integer.class), orderItemId.intValue())
+                .set(DSL.field("pizza_half", String.class), pizzaHalf)
+                .set(DSL.field("topping_id", Integer.class), toppingId.intValue())
+                .returning(DSL.field("custom_topping_id", Integer.class))
+                .fetchOne();
+
+        Integer customToppingId = inserted == null ? null : inserted.get(DSL.field("custom_topping_id", Integer.class));
+        if (customToppingId == null) {
+            logger.error("custom topping id is null");
+            throw new RuntimeException("Failed to save custom topping.");
+        }
+
+        return customToppingId.longValue();
     }
 }

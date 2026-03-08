@@ -64,6 +64,7 @@ public class UserController {
 
         Map<String, Object> addr = new HashMap<>();
         if (address != null) {
+            addr.put("addressId", address.getId());
             addr.put("address1", address.getAddress1());
             addr.put("address2", address.getAddress2());
             addr.put("city", address.getCity());

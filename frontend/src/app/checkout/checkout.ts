@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { CartSummaryDto, CartItemDto } from '../cart/cart';
+import { CartService } from '../cart.service';
+import { FormsModule } from '@angular/forms';
 
 // ── Interfaces ──────────────────────────────────────────
 
@@ -16,11 +18,18 @@ export interface UserProfileDto {
 }
 
 export interface AddressDto {
+  addressId: number;
   address1: string | null;
   address2: string | null;
   city:     string | null;
   state:    string | null;
   zip:      string | null;
+}
+
+export interface PaymentDto {
+  cardNumber: string;
+  expirationDate: string;
+  cvv: string;
 }
 
 export interface PizzaSize  { sizeId: number; sizeName: string; }
@@ -32,7 +41,7 @@ export interface Toppings   { toppingId: number; toppingName: string; extraCost:
 @Component({
   selector:    'app-checkout',
   standalone:  true,
-  imports:     [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   encapsulation: ViewEncapsulation.None,
   styleUrls:   ['./checkout.css'],
   templateUrl: './checkout.html',
@@ -47,6 +56,11 @@ export class Checkout implements OnInit {
   loadError   = signal('');
   placing     = signal(false);
   deliveryMethod = signal<'DELIVERY' | 'PICKUP'>('DELIVERY');
+
+  // Credit card info
+  cardNumber     = '';
+  expirationDate = '';
+  cvv            = '';
 
   // Lookup data
   sizes       = signal<PizzaSize[]>([]);
@@ -98,7 +112,7 @@ export class Checkout implements OnInit {
 
   // ── Constructor ───────────────────────────────────────
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cartService: CartService) {}
 
   // ── Lifecycle ─────────────────────────────────────────
 
@@ -153,28 +167,69 @@ export class Checkout implements OnInit {
 
     // Snapshot the cart now so the modal has data even after cart clears
     const cartSnapshot = this.cart();
+    const addressDto = this.profile()?.address;
 
     const body = {
-      deliveryMethod: "DELIVERY",
+      deliveryMethod:  this.deliveryMethod(),
       deliveryAddress: this.fullAddress(),
+      addressId:       addressDto?.addressId ?? null,
+      cardNumber:      this.cardNumber,
+      expirationDate:  this.expirationDate,
+      cvv:             this.cvv,
     };
 
-    this.http.post<{ orderId: number }>('/api/checkout/process', body).subscribe({
+    if (!this.isValidExpDate(this.expirationDate)) {
+      this.showToast('Please enter a valid expiration date (MM/YY).', 'error');
+      this.placing.set(false);
+      return;
+    }
+
+    const stripped = this.cardNumber.replace(/\s/g, '');
+    if (stripped.length !== 16) {
+      this.showToast('Please enter a complete 16-digit card number.', 'error');
+      this.placing.set(false);
+      return;
+    }
+
+    if (!/^\d{13,19}$/.test(this.cardNumber.replace(/\s/g, '')) || this.cardNumber.length < 16) {
+      this.showToast('Please enter a valid card number.', 'error');
+      this.placing.set(false);
+      return;
+    }
+
+    if (!/^\d{3,4}$/.test(this.cvv)) {
+      this.showToast('Please enter a valid CVV.', 'error');
+      this.placing.set(false);
+      return;
+    }
+
+    this.http.post<{ orderId: number }>('/api/payment/process', body).subscribe({
       next: res => {
-        this.placing.set(false);
-        // Store snapshot for the modal
-        this.confirmedOrderId.set(res.orderId);
-        this.confirmedCart.set(cartSnapshot);
-        // Show modal
-        this.orderConfirmed.set(true);
-        // Clear the live cart so it reflects "empty" behind the modal
-        this.cart.set(null);
+        this.http.post<{ orderId: number }>('/api/checkout/process', body).subscribe({
+          next: res => {
+            this.placing.set(false);
+            // Store snapshot for the modal
+            this.confirmedOrderId.set(res.orderId);
+            this.confirmedCart.set(cartSnapshot);
+            // Show modal
+            this.orderConfirmed.set(true);
+            // Clear the live cart so it reflects "empty" behind the modal
+            this.cart.set(null);
+            this.cartService.setCount(0);
+            this.triggerPizzaRain();
+          },
+          error: err => {
+            this.placing.set(false);
+            this.showToast(err?.error?.message ?? 'Failed to place order. Please try again.', 'error');
+          },
+        });
       },
       error: err => {
         this.placing.set(false);
-        this.showToast(err?.error?.message ?? 'Failed to place order. Please try again.', 'error');
+        this.showToast(err?.error?.message ?? 'Failed to verifying payment information. Please try again.', 'error');
       },
     });
+
   }
 
   // ── Modal ─────────────────────────────────────────────
@@ -225,5 +280,56 @@ export class Checkout implements OnInit {
 
   formatToppingIds(ids: number[]): string {
     return ids.length ? ids.map(id => this.toppingLabel(id)).join(', ') : 'None';
+  }
+
+  isValidExpDate(value: string): boolean {
+    const match = value.match(/^(0[1-9]|1[0-2])\/(\d{2})$/);
+    if (!match) return false;
+
+    const month = parseInt(match[1], 10);
+    const year = parseInt('20' + match[2], 10);
+    const now = new Date();
+    const expDate = new Date(year, month); // first day of month after expiry
+
+    return expDate > now;
+  }
+
+  formatCardNumber(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').substring(0, 16);
+    this.cardNumber = digits.replace(/(.{4})/g, '$1 ').trim();
+  }
+
+  formatExpDate(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').substring(0, 4);
+    this.expirationDate = digits.length > 2 ? digits.substring(0, 2) + '/' + digits.substring(2) : digits;
+  }
+
+  triggerPizzaRain(): void {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pizzaFall {
+        0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    for (let i = 0; i < 30; i++) {
+      setTimeout(() => {
+        const pizza = document.createElement('div');
+        pizza.style.position = 'fixed';
+        pizza.style.top = '-50px';
+        pizza.style.left = Math.random() * 100 + 'vw';
+        pizza.style.fontSize = (Math.random() * 1.5 + 1) + 'rem';
+        pizza.style.zIndex = '9999';
+        pizza.style.pointerEvents = 'none';
+        pizza.style.animation = `pizzaFall ${Math.random() * 2 + 1.5}s linear forwards`;
+        pizza.textContent = '🍕';
+        document.body.appendChild(pizza);
+        setTimeout(() => pizza.remove(), 4000);
+      }, Math.random() * 1500);
+    }
   }
 }

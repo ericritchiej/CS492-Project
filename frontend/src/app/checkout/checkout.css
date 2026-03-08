@@ -612,3 +612,17 @@
 .delivery-icon {
   font-size: 1.2rem;
 }
+
+.field-input {
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 10px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field-input:focus {
+  border-color: #e53935;
+}
