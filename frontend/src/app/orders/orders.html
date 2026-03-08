@@ -131,16 +131,26 @@
                 @for (item of order.items; track item.cartItemId) {
                   <div class="detail-item">
                     <div class="detail-item-info">
-                      <span class="detail-item-name">{{ item.name ?? 'Custom Pizza' }}</span>
+                      <span class="detail-item-name">{{ item.name }}</span>
                       <div class="detail-item-meta">
+                        @if (item.sizeName) {
+                          <span class="meta-pill">{{ item.sizeName }}</span>
+                        }
+                        @if (item.crustName) {
+                          <span class="meta-pill">{{ item.crustName }} Crust</span>
+                        }
                         @if (item.sauceName) {
                           <span class="meta-pill">{{ sauceLabel(item.sauceName) }}</span>
                         }
                       </div>
-                      @if ((item.toppingIdsLeft?.length ?? 0) > 0 && (item.toppingIdsRight?.length ?? 0) > 0) {
-                        <div class="detail-item-toppings">🍕 Half &amp; Half</div>
-                      } @else if ((item.toppingIdsFull?.length ?? 0) > 0) {
-                        <div class="detail-item-toppings">{{ item.toppingIdsFull!.length }} topping{{ item.toppingIdsFull!.length !== 1 ? 's' : '' }}</div>
+                      @if ((item.toppingIdsFull?.length ?? 0) > 0) {
+                        <div class="detail-item-toppings">{{ toppingNames(item.toppingIdsFull!) }}</div>
+                      }
+                      @if ((item.toppingIdsLeft?.length ?? 0) > 0) {
+                        <div class="detail-item-toppings"><em>Left half:</em> {{ toppingNames(item.toppingIdsLeft!) }}</div>
+                      }
+                      @if ((item.toppingIdsRight?.length ?? 0) > 0) {
+                        <div class="detail-item-toppings"><em>Right half:</em> {{ toppingNames(item.toppingIdsRight!) }}</div>
                       }
                     </div>
                     <div class="detail-item-right">
