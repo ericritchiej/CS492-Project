@@ -42,4 +42,7 @@ public class Order {
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "delivery_method")
+    private String deliveryMethod;
 }

@@ -7,6 +7,7 @@ import com.pizzastore.model.Order;
 import com.pizzastore.repository.CartRepository;
 import com.pizzastore.repository.OrderRepository;
 import com.pizzastore.repository.PromotionRepository;
+import com.pizzastore.controller.PaymentController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ class CheckoutControllerTest {
     private CartRepository cartRepository;
     private OrderRepository orderRepository;
     private PromotionRepository promotionRepository;
+    private PaymentController paymentController;
     private CheckoutController controller;
     private MockHttpSession session;
 
@@ -32,7 +34,8 @@ class CheckoutControllerTest {
         cartRepository = new CartRepository();
         orderRepository = mock(OrderRepository.class);
         promotionRepository = mock(PromotionRepository.class);
-        controller = new CheckoutController(cartRepository, orderRepository, promotionRepository);
+        paymentController = mock(PaymentController.class);
+        controller = new CheckoutController(cartRepository, orderRepository, promotionRepository, paymentController);
         session = new MockHttpSession();
         session.setAttribute("userId", 1L);
     }
@@ -49,7 +52,7 @@ class CheckoutControllerTest {
     @Test
     void processCheckout_emptyCart_returnsBadRequest() {
         ResponseEntity<OrderConfirmationDto> response = controller.processCheckout(
-                new CheckoutRequestDto("PICKUP", ""), session);
+                new CheckoutRequestDto("PICKUP", "", null, null, null, null), session);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -67,7 +70,7 @@ class CheckoutControllerTest {
         cartRepository.addItem(item);
 
         ResponseEntity<OrderConfirmationDto> response = controller.processCheckout(
-                new CheckoutRequestDto("DELIVERY", ""), session);
+                new CheckoutRequestDto("DELIVERY", "", null, null, null, null), session);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -85,9 +88,10 @@ class CheckoutControllerTest {
         cartRepository.addItem(item);
 
         when(orderRepository.save(any(Order.class))).thenReturn(123L);
+        when(orderRepository.saveRegularItem(any(Long.class), any(CartItem.class))).thenReturn(1L);
 
         ResponseEntity<OrderConfirmationDto> response = controller.processCheckout(
-                new CheckoutRequestDto("PICKUP", ""), session);
+                new CheckoutRequestDto("PICKUP", "", null, null, null, null), session);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -96,5 +100,6 @@ class CheckoutControllerTest {
         assertEquals("PENDING", response.getBody().getStatus());
         assertTrue(cartRepository.findAll().isEmpty(), "Cart should be cleared after successful checkout");
         verify(orderRepository, times(1)).save(any(Order.class));
+        verify(orderRepository, times(1)).saveRegularItem(any(Long.class), any(CartItem.class));
     }
 }

@@ -33,12 +33,16 @@ public class CheckoutController {
     private final OrderRepository orderRepository;
     private final PromotionRepository promotionRepository;
 
+    private final PaymentController paymentController;
+
     public CheckoutController(CartRepository cartRepository,
                               OrderRepository orderRepository,
-                              PromotionRepository promotionRepository) {
+                              PromotionRepository promotionRepository,
+                              PaymentController paymentController) {
         this.cartRepository = cartRepository;
         this.orderRepository = orderRepository;
         this.promotionRepository = promotionRepository;
+        this.paymentController = paymentController;
     }
 
     @GetMapping("/summary")
@@ -50,6 +54,64 @@ public class CheckoutController {
     public ResponseEntity<OrderConfirmationDto> processCheckout(
             @RequestBody CheckoutRequestDto request,
             HttpSession session) {
+        logger.info("Received request to process checkout {}", request);
+
+        if (request == null) {
+            throw new IllegalArgumentException("Order request cannot be null");
+        }
+
+        List<CartItem> items = cartRepository.findAll();
+
+        ResponseEntity<OrderConfirmationDto> validationError = validateInput(request, session, items);
+        if (validationError != null) return validationError;
+
+        Object userIdObj = session.getAttribute("userId");
+        Long customerId = ((Number) userIdObj).longValue();
+        String deliveryMethod = request.getDeliveryMethod().trim().toUpperCase();
+        Long addressIdInput = request.getAddressId();
+        String deliveryAddress = request.getDeliveryAddress() == null ? null : request.getDeliveryAddress().trim();
+        Long addressId;
+        if ("DELIVERY".equals(deliveryMethod)) {
+            addressId = orderRepository.findOrCreateAddressId(addressIdInput, customerId, deliveryAddress);
+        } else {
+            // For PICKUP, use an existing saved address if available (some DB schemas require address_id NOT NULL)
+            addressId = orderRepository.findExistingAddressId(addressIdInput);
+        }
+
+        BigDecimal subtotal = BigDecimal.valueOf(cartRepository.getTotal()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal discount = BigDecimal.valueOf(cartRepository.getAppliedDiscount()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal taxable = subtotal.subtract(discount).max(BigDecimal.ZERO);
+        BigDecimal tax = taxable.multiply(BigDecimal.valueOf(0.08)).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = taxable.add(tax).setScale(2, RoundingMode.HALF_UP);
+
+        Long promotionsId = null;
+        String promoCode = cartRepository.getAppliedPromoCode();
+        if (promoCode != null && !promoCode.isBlank()) {
+            Optional<Promotion> promo = promotionRepository.findByCode(promoCode);
+            if (promo.isPresent()) {
+                promotionsId = promo.get().getPromotionId();
+            }
+        }
+
+
+        Long orderId = buildAndSaveOrder(customerId, addressId, promotionsId,
+                deliveryMethod, total, discount, items);
+
+        paymentController.savePayment(orderId, addressId, request.getCardNumber(), request.getCvv(), request.getExpirationDate());
+
+        cartRepository.clearCart();
+
+        return ResponseEntity.ok(new OrderConfirmationDto(
+                orderId,
+                "PENDING",
+                deliveryMethod,
+                total,
+                "Order processed successfully"
+        ));
+    }
+
+    private ResponseEntity<OrderConfirmationDto> validateInput(
+            CheckoutRequestDto request, HttpSession session, List<CartItem> items) {
 
         Object userIdObj = session.getAttribute("userId");
         if (userIdObj == null) {
@@ -58,7 +120,6 @@ public class CheckoutController {
                     .body(new OrderConfirmationDto(null, null, null, null, "Authentication required"));
         }
 
-        List<CartItem> items = cartRepository.findAll();
         if (items.isEmpty()) {
             logger.error("cart is empty");
             return ResponseEntity.badRequest()
@@ -85,31 +146,12 @@ public class CheckoutController {
                                 "Delivery address is required for DELIVERY"));
             }
         }
+        return null;
+    }
 
-        Long customerId = ((Number) userIdObj).longValue();
-        String deliveryAddress = request.getDeliveryAddress() == null ? null : request.getDeliveryAddress().trim();
-        Long addressId;
-        if ("DELIVERY".equals(deliveryMethod)) {
-            addressId = orderRepository.findOrCreateAddressId(customerId, deliveryAddress);
-        } else {
-            // For PICKUP, use an existing saved address if available (some DB schemas require address_id NOT NULL)
-            addressId = orderRepository.findExistingAddressId(customerId);
-        }
-
-        BigDecimal subtotal = BigDecimal.valueOf(cartRepository.getTotal()).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal discount = BigDecimal.valueOf(cartRepository.getAppliedDiscount()).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal taxable = subtotal.subtract(discount).max(BigDecimal.ZERO);
-        BigDecimal tax = taxable.multiply(BigDecimal.valueOf(0.08)).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal total = taxable.add(tax).setScale(2, RoundingMode.HALF_UP);
-
-        Long promotionsId = null;
-        String promoCode = cartRepository.getAppliedPromoCode();
-        if (promoCode != null && !promoCode.isBlank()) {
-            Optional<Promotion> promo = promotionRepository.findByCode(promoCode);
-            if (promo.isPresent()) {
-                promotionsId = promo.get().getPromotionId();
-            }
-        }
+    private Long buildAndSaveOrder(Long customerId, Long addressId, Long promotionsId,
+                                   String deliveryMethod, BigDecimal total, BigDecimal discount,
+                                   List<CartItem> items) {
 
         Order order = new Order();
         order.setCustomerId(customerId);
@@ -120,17 +162,42 @@ public class CheckoutController {
         order.setTotalAmount(total);
         order.setDiscountAmount(discount);
         order.setStatus("PENDING");
+        order.setDeliveryMethod(deliveryMethod);
 
         Long orderId = orderRepository.save(order);
-        cartRepository.clearCart();
 
-        return ResponseEntity.ok(new OrderConfirmationDto(
-                orderId,
-                order.getStatus(),
-                deliveryMethod,
-                total,
-                "Order processed successfully"
-        ));
+        for (CartItem cartItem : items) {
+            if (cartItem.getProductId() != null) {
+                Long orderItemId = orderRepository.saveRegularItem(orderId, cartItem);
+                logger.info("Regular orderItem: {} is item id: {}", orderItemId, orderItemId);
+            } else {
+                Long orderItemId = orderRepository.saveCustomItem(orderId, cartItem);
+
+                if (cartItem.getToppingIdsFull() != null && cartItem.getToppingIdsFull().length > 0) {
+                    logger.info("toppingIds full: {}", cartItem.getToppingIdsFull());
+                    for (Long toppingId : cartItem.getToppingIdsFull()) {
+                        orderRepository.saveCustomItemTopping(orderItemId, "FULL", toppingId);
+                    }
+                } else {
+                    if (cartItem.getToppingIdsLeft() != null && cartItem.getToppingIdsLeft().length > 0) {
+                        logger.info("toppingIds left: {}", cartItem.getToppingIdsLeft());
+                        for (Long toppingId : cartItem.getToppingIdsLeft()) {
+                            orderRepository.saveCustomItemTopping(orderItemId, "LEFT", toppingId);
+                        }
+                    }
+                    if (cartItem.getToppingIdsRight() != null && cartItem.getToppingIdsRight().length > 0) {
+                        logger.info("toppingIds right: {}", cartItem.getToppingIdsRight());
+                        for (Long toppingId : cartItem.getToppingIdsRight()) {
+                            orderRepository.saveCustomItemTopping(orderItemId, "RIGHT", toppingId);
+                        }
+                    }
+                }
+
+                logger.info("Custom orderItem: {} is item id: {}", orderItemId, orderItemId);
+            }
+        }
+
+        return orderId;
     }
 
     private Map<String, Object> buildSummary() {
